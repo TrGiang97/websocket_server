@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Toeicsinhvien Student</title>
+  <!-- CSS & ICON -->
+  <link type="text/css" href="https://toeicsinhvien.com/public/libs/pixel-bootstrap/vendor/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link type="text/css" href="https://toeicsinhvien.com/public/libs/pixel-bootstrap/css/pixel.css" rel="stylesheet">
+  <style>
+    .cursor-pointer {cursor: pointer;}
+    ::-webkit-scrollbar {display: none;}
+    .avaActive {background: aqua;}
+    body {
+      cursor: default; 
+      -webkit-user-select: none; /* Safari */
+      -ms-user-select: none; /* IE 10 and IE 11 */
+      user-select: none; /* Standard syntax */
+    }
+    /* Record Button Animation */
+    .recorder-container{position:fixed;bottom:10%;left:50%;margin-left:-40px;width:80px;background-color:#171f38;display:block;border-radius:100%;cursor:default;transition:.3s ease-in}
+    .icon-microphone{color:#fff;font-size:40px;line-height:80px;display:block;text-align:center;transition:.1s ease-in;position:relative}
+    .outer,.outer-2{-webkit-transform:scale(1);position:absolute;z-index:-1;transition:1.5s}
+    .outer{width:78px;height:78px;border-radius:100%;background-color:transparent;border:1px solid #7f8c8d;-webkit-animation:1.5s infinite woong}
+    .outer-2{width:80px;height:80px;border-radius:100%;background-color:#bdc3c7;-webkit-animation:1.5s 2.5s infinite woong-2}
+    @-webkit-keyframes woong{0%{-webkit-trasform:scale(1.2)}50%{-webkit-transform:scale(1.8);opacity:.5}100%{-webkit-transform:scale(2.4);opacity:0}}
+    @-webkit-keyframes woong-2{0%{-webkit-transform:scale(1.2);opacity:.6}50%{-webkit-transform:scale(1.6);opacity:.5}100%{-webkit-transform:scale(2);opacity:0}}
+  </style>
+</head>
+<body style="min-height: 100vh;">
+  <!----------------------------- HEADER -------------------------------->
+  <div id="header" class="bg-primary text-center text-white py-3">
+    <h1 id="bigHeader">Toeicsinhvien Classroom</h1>
+    <span id="smallHeader">Ready to get exercise!</span>
+  </div>
+  <section id="profileForm" class="text-center">
+    <h4 class="mt-3">Set Your Name</h4>
+    <input type="text" id="name" class="text-center" placeholder="Enter Your Name" style="width: 80%">
+    <br>
+    <h4 class="mt-3">Select Avatar</h4>
+    <div class="container-fluid">
+      <div id="avatarTable" class="row justify-content-center"></div>
+    </div>
+    <button class="btn btn-success text-white mt-3" onclick="saveProfile()">Save Profile</button>
+  </section>
+  <section id="questionSection">
+    <h2 class="text-center pt-3"><i id="audioQuestion" onClick="questionAudio.play()" class="p-3 fas fa-play-circle cursor-pointer d-none"></i> <i id="audioAnswer" onClick="recordData.play()" class="p-3 fas fa-play-circle cursor-pointer text-success d-none"></i></h2>
+    <image id="imageQuestion" style="display: block;max-width: 600px;width: 80%;margin-left: auto;margin-right: auto;">
+    <h2 id="question" class="text-center pt-3 px-3 px-md-5">Waiting for the teacher to send a question...</h2>
+    <div class="recorder-container">
+      <div class="outer d-none"></div>
+      <div class="outer-2 d-none"></div>
+      <div id="recordButton" class="icon-microphone cursor-pointer"><i class="fas fa-microphone-alt"></i></div>
+    </div>
+  </section>
+
+  <div id="questionSection" style="display: none;">
+    <label>Question:</label>
+    <div id="question">Waiting for the teacher to send a question...</div>
+    <audio controls="" id="audioPlayer" style="height: 30px">
+      <source src="">
+      Your browser does not support the audio element.
+    </audio>
+    <br>
+    <button id="startRecording">Start Recording</button>
+    <button id="stopRecording">Stop Recording</button>
+    <button id="submitAnswer">Submit Answer</button>
+    <div id="status">Status: Not Recording</div>
+    <div id="message">Waiting for the teacher...</div>
+  </div>
+
+  <script>
+    var questionAudio, recordData;
+    var profileSaved = false;
+    var recorder; // Declare the recorder variable
+
+    /****************************** WEBSOCKET *******************************/
+    const wsUrl = '8254-27-74-196-147.ngrok-free.app'
+    const ws = new WebSocket('wss://' + wsUrl);
+
+    ws.onopen = () => {
+      console.log('Connected to the server.');
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'welcome') {
+        const { id, lastQuestion } = data.data;
+        document.getElementById('message').innerText = `Welcome, Student ${id}!`;
+        if (!profileSaved) {
+          document.getElementById('profileForm').style.display = 'block';
+          document.getElementById('questionSection').style.display = 'none';
+        } else {
+          document.getElementById('profileForm').style.display = 'none';
+          document.getElementById('questionSection').style.display = 'block';
+        }
+        if (lastQuestion) {
+          // Handle last question from the teacher
+          const { question, expireTime, audioData, imageData, classModule, classExercise } = lastQuestion;
+          generateNewQuestion(question, expireTime, audioData, imageData, classModule, classExercise)
+        }
+      } else if (data.type === 'new_question') {
+        // Handle new question from the teacher
+        const { question, expireTime, audioData, imageData, classModule, classExercise } = data.data;
+        generateNewQuestion(question, expireTime, audioData, imageData, classModule, classExercise)
+      }
+    };
+
+    function generateNewQuestion(question, expireTime, audioData, imageData, classModule, classExercise){
+      console.log(classModule);
+      const now = new Date()
+      if (now.getTime() < expireTime){
+        let timeLeft = Math.floor((expireTime - now.getTime())/1000)
+        startCountdown(timeLeft)
+      }
+
+      document.getElementById("question").innerText = question
+      document.getElementById("audioAnswer").classList.add("d-none")
+      document.getElementById("audioQuestion").classList.add("d-none")
+      document.getElementById("imageQuestion").classList.add("d-none")
+      if (classModule){
+        questionAudio = new Audio(`https://toeicsinhvien.com/temp/recordingWS/assets/data/${classModule}/${classExercise}.mp3`)
+        document.getElementById("audioQuestion").classList.remove("d-none")
+        document.getElementById("imageQuestion").src = `https://toeicsinhvien.com/temp/recordingWS/assets/data/${classModule}/${classExercise}.PNG`
+        document.getElementById("imageQuestion").classList.remove("d-none")
+      } else {
+        if (audioData) {
+          let audioUrl = unitDataToUrl(Object.values(audioData), "audio/wav")
+          questionAudio = new Audio(audioUrl)
+          document.getElementById("audioQuestion").classList.remove("d-none")
+        }
+        if (imageData) {
+          let imageUrl = unitDataToUrl(Object.values(imageData), "image/png")
+          document.getElementById("imageQuestion").src = imageUrl
+          document.getElementById("imageQuestion").classList.remove("d-none")
+        }
+      }
+    }
+
+    let countdownInterval; // Declare a variable to store the interval ID
+
+    function startCountdown(seconds) {
+      clearInterval(countdownInterval); // Clear the previous interval, if any
+
+      const timerElement = document.getElementById('bigHeader');
+      const noticeElement = document.getElementById('smallHeader');
+      const alertSound = new Audio('./assets/ding.mp3')
+      noticeElement.innerText = 'Finish your exercise after time end!'
+
+      function updateTimerDisplay(minutes, seconds) {
+        timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      }
+
+      function updateCountdown() {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+
+        updateTimerDisplay(minutes, remainingSeconds);
+
+        if (seconds === 0) {
+          clearInterval(countdownInterval);
+          timerElement.textContent = 'Time\'s up!';
+          alertSound.play(); // Play the audio alert
+        }
+
+        seconds--;
+      }
+
+      updateCountdown();
+      countdownInterval = setInterval(updateCountdown, 1000); // Store the new interval ID
+    }
+
+    // Save the student's profile when clicking the Save Profile button
+    function saveProfile() {
+      const name = document.getElementById('name').value.trim();
+      localStorage.name = name
+      localStorage.avatar = selectedAvatar
+
+      if (!name) {
+        alert('Please enter your name.');
+        return;
+      }
+
+      profileSaved = true;
+
+      // Hide the profile form and show the question section
+      document.getElementById('profileForm').style.display = 'none';
+      document.getElementById('questionSection').style.display = 'block';
+
+      // Send the student's name and avatar to the server
+      ws.send(
+        JSON.stringify({
+          type: 'setProfile',
+          name,
+          avatar: selectedAvatar,
+          role: 'student'
+        })
+      );
+    }
+
+    // Remove student data when disconnecting
+    ws.onclose = (error) => {
+      if (error.code == 1006) {
+        window.location.href = "https://"+wsUrl
+      } else {
+        profileSaved = false;
+        document.getElementById('name').value = '';
+        document.getElementById('avatar').value = 'avatar1.png';
+        document.getElementById('profileForm').style.display = 'block';
+        document.getElementById('questionSection').style.display = 'none';
+      }     
+    };
+
+    /****************************** RECORDING *******************************/
+    const recordAudio = () => {
+      return new Promise(async (resolve) => {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        const audioChunks = [];
+
+        mediaRecorder.addEventListener('dataavailable', (event) => {
+          audioChunks.length = 0
+          audioChunks.push(event.data);
+        });
+
+        const start = () => mediaRecorder.start();
+
+        const stop = () =>
+          new Promise((resolve) => {
+            mediaRecorder.addEventListener('stop', async () => {
+              const audioBlob = new Blob(audioChunks);
+              const binaryData = await convertBlobToBinaryDataSync(audioBlob);
+              const audioUrl = URL.createObjectURL(audioBlob);
+              const audio = new Audio(audioUrl);
+              const play = () => audio.play();
+              const pause = () => audio.pause();
+              resolve({ binaryData, audioUrl, play, pause });
+            });
+            mediaRecorder.stop();
+          });
+
+        resolve({ start, stop });
+      });
+    };
+    (async () => (recorder = await recordAudio()))();
+
+    // Assign recorder when Save Profile is clicked
+    var onRecord = false, startSound = new Audio('./assets/start-record.mp3')
+    document.getElementById('recordButton').addEventListener('click', async () => {
+      if (onRecord) {
+        document.querySelector(".outer").classList.add("d-none")
+        document.querySelector(".outer-2").classList.add("d-none")
+        document.querySelector(".recorder-container").classList.remove("bg-danger")
+        document.querySelector("#header").classList.remove("bg-danger")
+        recordData = await recorder.stop();
+        document.getElementById("audioAnswer").classList.remove("d-none")
+        ws.send(
+          JSON.stringify({
+            type: 'student_record',
+            binaryData: recordData.binaryData,
+          })
+        );
+        onRecord = false
+      document.getElementById('status').innerText = 'Status: Not Recording';
+      } else {
+        recorder.start();
+        startSound.play()
+        document.querySelector(".outer").classList.remove("d-none")
+        document.querySelector(".outer-2").classList.remove("d-none")
+        document.querySelector(".recorder-container").classList.add("bg-danger")
+        document.querySelector("#header").classList.add("bg-danger")
+        onRecord = true
+      }
+    });
+
+    document.getElementById('stopRecording').addEventListener('click', async () => {
+      
+    });
+
+
+    function convertBlobToBinaryDataSync(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          const binaryData = new Uint8Array(reader.result);
+          resolve(binaryData);
+        };
+
+        reader.onerror = (error) => {
+          reject(error);
+        };
+
+        reader.readAsArrayBuffer(blob);
+      });
+    }
+
+
+    // Helper function to display audio question
+    function unitDataToUrl(binaryData, type) {
+      const data = new Uint8Array(binaryData);
+      const blob = new Blob([data], { type: "audio/wav" })
+      const url = URL.createObjectURL(blob);
+      return url
+    }
+
+
+    /****************************** KHÁC **************************/
+    const listAvatar = ['bear','cat','chick','chicken','cow','dog','duck','fox','goat','goldfish','hamster','hedgehog','horse','kitten','moose','owl','pig','puppy','rabbit','raccoon','seal','sheep','snowyOwl','squirrel','turtle','walrus','anaconda','capuchinMonkey','cockatoo','jaguar','macaw','orangutan','parrot','panther','tiger','toucan','dragon','elf','unicorn','cheshireCat','whiteRabbit']
+    var avatarHtml = '', selectedAvatar = localStorage.avatar ? localStorage.avatar : 'bear'
+    listAvatar.forEach(avatar => avatarHtml += `<img id="${avatar}" class="col-3 col-md-1 cursor-pointer" src="assets/images/${avatar}.svg" onclick="selectAva(event, '${avatar}')">`)
+    document.getElementById('avatarTable').innerHTML = avatarHtml
+
+    function selectAva(event, avatar) {
+      try { document.querySelector(".avaActive").classList.remove("avaActive") }
+      catch (e) {}
+      event.target.classList.add("avaActive")
+      selectedAvatar = avatar
+    }
+
+    window.onload = function() {
+      document.getElementById('name').value = localStorage.name ? localStorage.name : ""
+      document.getElementById(localStorage.avatar).click()
+    }
+  </script>
+</body>
+</html>
