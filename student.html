@@ -75,7 +75,7 @@
     var recorder; // Declare the recorder variable
 
     /****************************** WEBSOCKET *******************************/
-    const wsUrl = '8254-27-74-196-147.ngrok-free.app'
+    const wsUrl = '13.233.88.101:8080'
     const ws = new WebSocket('wss://' + wsUrl);
 
     ws.onopen = () => {
@@ -107,7 +107,6 @@
     };
 
     function generateNewQuestion(question, expireTime, audioData, imageData, classModule, classExercise){
-      console.log(classModule);
       const now = new Date()
       if (now.getTime() < expireTime){
         let timeLeft = Math.floor((expireTime - now.getTime())/1000)
@@ -234,7 +233,11 @@
               const audio = new Audio(audioUrl);
               const play = () => audio.play();
               const pause = () => audio.pause();
-              resolve({ binaryData, audioUrl, play, pause });
+              console.log(audioBlob.size);
+              if (audioBlob.size >= 350000)
+                resolve()
+              else
+                resolve({ binaryData, audioUrl, play, pause });
             });
             mediaRecorder.stop();
           });
@@ -253,15 +256,17 @@
         document.querySelector(".recorder-container").classList.remove("bg-danger")
         document.querySelector("#header").classList.remove("bg-danger")
         recordData = await recorder.stop();
-        document.getElementById("audioAnswer").classList.remove("d-none")
-        ws.send(
-          JSON.stringify({
-            type: 'student_record',
-            binaryData: recordData.binaryData,
-          })
-        );
+        try {
+          ws.send(
+            JSON.stringify({
+              type: 'student_record',
+              binaryData: recordData.binaryData,
+            })
+          );
+          document.getElementById("audioAnswer").classList.remove("d-none")
+        } catch (e) {}
         onRecord = false
-      document.getElementById('status').innerText = 'Status: Not Recording';
+        document.getElementById('status').innerText = 'Status: Not Recording';
       } else {
         recorder.start();
         startSound.play()

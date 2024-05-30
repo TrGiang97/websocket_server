@@ -6,7 +6,8 @@ let server = require('http').createServer();
 const express = require('express');
 const app = express();
 app.get('/', (req, res) => {
-  res.redirect('https://toeicsinhvien.com/temp/recordingWS/student.html');
+  // res.redirect('https://toeicsinhvien.com/temp/recordingWS/student.html');
+  res.sendFile(path.join(__dirname, '/student.html'));
 });
 
 let wss = new WebSocket.Server({ server })

@@ -97,7 +97,7 @@
     if (localStorage.role != 'admin') window.location.href = "./student.html"
     // WebSocket connection to the server
     // const ws = new WebSocket('ws://localhost:8080');
-    const ws = new WebSocket('wss://b288-14-161-14-251.ngrok-free.app');
+    const ws = new WebSocket('wss://6da0-118-68-105-204.ngrok-free.app');
 
     ws.onopen = () => {
       console.log('Connected to the server.');
@@ -178,13 +178,16 @@
       [],
       [],
       ["1. Wake up! We overslept!","2. When is the deadline?","3. 1p.m, we’re running short on time.","4. I’ve been waiting for a long time.","5. Sorry that I’m late.","6. Why are you so late?","7. The heavy traffic held me up.","8. Is everyone here for the meeting? ","9. We are about to start, where is Tom?","10. Where are you? You’re late!","11. I'm  on  my  way!"],
-      [],
-      [],
-      [],
-      [],
-      [],
-      [],
-      [],
+      [" 1.Good afternoon, Honda marketing. How can i help you? ","2. Yes, I would like to buy a car. ","3. May I park here? ","4. No, you’re not allowed to park here.","5. You left your book  in my car.","6. Can you drop it by my house?","7. When will you be back? ","8. I’ll be back  in an hour.","9a. A lot of people ask me","9b. if it is possible to sound","9c. like a native speaker.","9. A lot of people ask me if it is possible to sound like a native speaker."],
+      ["1. Do you wanna","2. No, I’m sick","3. Sure, let's go next week.","4. What did they say","5. They said it’s gonna rain today","6. How do you like the weather","7. Fed up with the rain","8. How was your trip","9. We had a good time despite the rain","10. Dad, you forgot my birthday party"],
+      ["1Tom, what did you do today","2work up","3what are you doing","4nothing","5Should we get dinner","6cookies","7gone","8split the check","9it’s on me","10sleep","11Go ahead","12I've try"],
+      ["1. Which one would you like?","2. I can’t make up my mind.","3. How many sizes do you have?","4. This lamp comes in 3 sizes: Small, Medium & Large.","5. How may I help you?","6. I’d like one chocolate donut please.","7. Excuse me. Do you have change for a dollar? ","8. Yes, here you are.","10. Can i buy that one?"],
+      ["1. May I speak to Adele please?","2. This is Adele.","3. Hi. This is Bill from your English class.","4. Hi Ali, are we still on for today?","5. Yes, let’s meet at the theater at 7 p.m.","6. Hey, I’m going to West Mall.","7. Come on. I’ll drop you off.","8. Bye, thanks for dropping me off","9. Tonight, I’m meeting up with some friends","10. in the West Village for pizza. ","11. We may stay in the West Village afterwards."],
+      ["1. Do you mind if  I join you?","2. Of course not, have a seat.","3. When did you start this restaurant?","4. 30 years  ago.","5. Tell me about yourself?","6. I was a taxi driver for 3 years and I’m a hard worker. ","7. On top of that, I can speak 3 languages.","8. Here’s your uniform. You can put it on in the changing room. ","9. Sure. Thanks a lot ","10. You look so tired.","11. Yes, I’m under a lot of pressure this month"],
+      ["1. Could you drop this off  at the shoe repair shop?","2. Certainly. It will be ready on Thursday.","3. How’s the project coming along?","4. Great, I’m ahead of schedule.","5. Fine, I’m on schedule.","6. Not good, I’m behind schedule.","7. Can we meet today? ","8. Sorry, I’m tied up. How about tomorrow?","9. May I speak to Tom Smith?","10. I’m sorry, he just stepped out. He should be back  in a few minutes.","11. Sue Smith! What a surprise to see you!","12.Yeah, I’m so surprised to run into you here."],
+      ["1. How long are you guys going away for?","2. 2 nights. We'll be back the day after tomorrow.","3. It’s a long way. Let’s take turns driving. - Okay","4. How's your sandcastle coming along?","5. So far so good.","6. We bought you this gift.","7. Thank you, but you shouldn’t have.","8. It's our pleasure.","9. Does it work?","10. I’ll plug  it in for you.","11. Is it in good condition?","12. Don’t worry. It’s  in perfect condition."],
+      ["1. Oh, no! My hair! It’s ruined.","2. It’s not the end of the world. Your hair will grow back.","3. When will my hair grow back?","4. I know how you feel. We are in the same boat. ","5. Excuse me.","6. That’s okay. What can I do for you?","7. Sorry to interrupt.Can I talk to you for a moment?","8. Do you know where Mr. Smith is?","9. I have no idea. ","10. Can you call me back later?","11. Yes, I’ll call you back later. When is a good time?"],
+      ["1. Can I speak to the manager?","2. Yes, can I put you on hold for a minute?","3. Who's that on the phone?","4. It’s for you. It’s your wife.","5. I’m going to Hanoi city.","6. For how long? ","7. For good, I got a job there.","8. Not working today?","9. No, I’m sick, I took the day off.","10. What's going on?","11. I took it apart, now I can’t put it back together."]
     ]
 
     function switchModule(event){
