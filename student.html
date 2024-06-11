@@ -75,7 +75,7 @@
     var recorder; // Declare the recorder variable
 
     /****************************** WEBSOCKET *******************************/
-    const wsUrl = '13.233.88.101:8080'
+    const wsUrl = 'ea48-42-114-218-110.ngrok-free.app'
     const ws = new WebSocket('wss://' + wsUrl);
 
     ws.onopen = () => {
@@ -313,7 +313,7 @@
     /****************************** KHÁC **************************/
     const listAvatar = ['bear','cat','chick','chicken','cow','dog','duck','fox','goat','goldfish','hamster','hedgehog','horse','kitten','moose','owl','pig','puppy','rabbit','raccoon','seal','sheep','snowyOwl','squirrel','turtle','walrus','anaconda','capuchinMonkey','cockatoo','jaguar','macaw','orangutan','parrot','panther','tiger','toucan','dragon','elf','unicorn','cheshireCat','whiteRabbit']
     var avatarHtml = '', selectedAvatar = localStorage.avatar ? localStorage.avatar : 'bear'
-    listAvatar.forEach(avatar => avatarHtml += `<img id="${avatar}" class="col-3 col-md-1 cursor-pointer" src="assets/images/${avatar}.svg" onclick="selectAva(event, '${avatar}')">`)
+    listAvatar.forEach(avatar => avatarHtml += `<img id="${avatar}" class="col-3 col-md-1 cursor-pointer" src="./assets/images/${avatar}.svg" onclick="selectAva(event, '${avatar}')">`)
     document.getElementById('avatarTable').innerHTML = avatarHtml
 
     function selectAva(event, avatar) {
