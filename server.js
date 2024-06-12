@@ -1,17 +1,22 @@
-// Ws connection
-const WebSocket = require('ws');
-// const wss = new WebSocket.Server({ port: 8080 });
-let server = require('http').createServer();
-// Express webpage
+// Create Server with SSL
+const fs = require('fs')
+var https = require('https');
 const express = require('express');
-const app = express();
 const path = require('path');
-
+const SSLcert = {
+  key: fs.readFileSync("SSLcert/private.key"),
+  cert: fs.readFileSync("SSLcert/certificate.crt"),
+  ca: fs.readFileSync("SSLcert/ca_bundle.crt")
+}
+const app = express();
 app.get('/', (req, res) => {
   res.redirect('https://toeicsinhvien.com/temp/recordingWS/student.html');
   // res.sendFile(path.join(__dirname, '/student.html'));
 });
+let server = https.createServer(SSLcert, app);
 
+
+const WebSocket = require('ws');
 let wss = new WebSocket.Server({ server })
 server.on('request', app);
 
@@ -142,5 +147,8 @@ wss.on('connection', (ws) => {
 });
 
 server.listen(8080, function() {
-    console.log(`User connected`);
+  console.log(`User connected`);
 });
+
+
+
