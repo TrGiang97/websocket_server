@@ -4,9 +4,9 @@ const express = require('express');
 const WebSocket = require('ws');
 
 const SSLcert = {
-  key: fs.readFileSync('/path/to/SSLcert/private.key'),
-  cert: fs.readFileSync('/path/to/SSLcert/certificate.crt'),
-  ca: fs.readFileSync('/path/to/SSLcert/ca_bundle.crt')
+  key: fs.readFileSync('SSLcert/private.key'),
+  cert: fs.readFileSync('SSLcert/certificate.crt'),
+  ca: fs.readFileSync('SSLcert/ca_bundle.crt')
 };
 
 const app = express();
