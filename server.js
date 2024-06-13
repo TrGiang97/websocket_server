@@ -1,24 +1,24 @@
-const fs = require('fs');
-const https = require('https');
+// Create Server with SSL
+const fs = require('fs')
+const http = require('http');
 const express = require('express');
-const WebSocket = require('ws');
-
+const path = require('path');
 const SSLcert = {
-  key: fs.readFileSync('SSLcert/private.key'),
-  cert: fs.readFileSync('SSLcert/certificate.crt'),
-  ca: fs.readFileSync('SSLcert/ca_bundle.crt')
-};
-
+  key: fs.readFileSync("SSLcert/private.key"),
+  cert: fs.readFileSync("SSLcert/certificate.crt"),
+  ca: fs.readFileSync("SSLcert/ca_bundle.crt")
+}
 const app = express();
-
 app.get('/', (req, res) => {
   res.redirect('https://toeicsinhvien.com/temp/recordingWS/student.html');
   // res.sendFile(path.join(__dirname, '/student.html'));
 });
+const server = http.createServer(SSLcert, app);
 
-let server = https.createServer(SSLcert, app);
 
-const wss = new WebSocket.Server({ server });
+const WebSocket = require('ws');
+let wss = new WebSocket.Server({ server })
+server.on('request', app);
 
 // Store connected students and teacher
 const users = new Map(); // Use Map to store users with unique identifiers
@@ -31,7 +31,6 @@ wss.on('connection', (ws) => {
   const userId = nextUserId++;
   // Add the client to the set of connected clients
   connectedClients.add(ws);
-
   // Initialize user data
   const user = {
     id: userId,
@@ -47,7 +46,8 @@ wss.on('connection', (ws) => {
   // Handle incoming messages from users
   ws.on('message', (message) => {
     const data = JSON.parse(message);
-
+    // console.log(data);
+    // If the message is to set the user's profile, update the data
     if (data.type === 'setProfile') {
       user.name = data.name;
       user.avatar = data.avatar;
@@ -64,17 +64,17 @@ wss.on('connection', (ws) => {
         const studentList = getStudentList();
         studentList.forEach(studentData => {
           user.socket.send(JSON.stringify({ type: 'new_user', data: studentData }));
-        });
+        })
       }
     } else if (data.type === 'student_record' && user.role === 'student') {
       // Send the student's recorded audio to the teacher
       const teacher = findTeacher();
       if (teacher && teacher.socket.readyState === WebSocket.OPEN) {
         teacher.socket.send(JSON.stringify({ type: 'new_record', studentId: userId, binaryData: data.binaryData }));
-      }
+      } 
     } else if (data.type === 'new_question' && user.role === 'teacher') {
       const { question, expireTime, audioData, imageData, classModule, classExercise } = data.data;
-      lastQuestion = { question, expireTime, audioData, imageData, classModule, classExercise };
+      lastQuestion = { question, expireTime, audioData, imageData, classModule, classExercise }
       broadcastToAll({ type: 'new_question', data: { question, expireTime, audioData, imageData, classModule, classExercise } });
     }
   });
@@ -84,16 +84,17 @@ wss.on('connection', (ws) => {
 
   // Remove the user from the map when they disconnect
   ws.on('close', () => {
+    // Capture the 'user' object in a closure to ensure its availability
+    const user = users.get(userId);
     if (user) {
       users.delete(userId);
-      connectedClients.delete(ws);
 
       // Notify other users about the disconnection
       if (user.role === 'teacher') {
         // Notify all students about the teacher's disconnection
         wss.clients.forEach((client) => {
           if (client.readyState === WebSocket.OPEN) {
-            const clientUser = [...users.values()].find(u => u.socket === client);
+            const clientUser = users.get(client.id);
             if (clientUser && clientUser.role === 'student') {
               client.send(JSON.stringify({ type: 'teacher_disconnected' }));
             }
@@ -115,8 +116,8 @@ wss.on('connection', (ws) => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(JSON.stringify(message));
       }
-    });
-  }
+    })
+  };
 
   // Helper function to find the teacher user
   function findTeacher() {
@@ -146,5 +147,8 @@ wss.on('connection', (ws) => {
 });
 
 server.listen(8080, function() {
-  console.log('Secure server listening on port 8080');
+  console.log(`User connected`);
 });
+
+
+
