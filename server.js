@@ -11,8 +11,8 @@ const SSLcert = {
 const app = express();
 const server = https.createServer(SSLcert, app);
 app.get('/', (req, res) => {
-  res.redirect('https://toeicsinhvien.com/temp/recordingWS/student.html');
-  // res.sendFile(path.join(__dirname, '/student.html'));
+  // res.redirect('https://toeicsinhvien.com/temp/recordingWS/student.html');
+  res.sendFile(path.join(__dirname, '/student.html'));
 });
 
 const WebSocket = require('ws');
