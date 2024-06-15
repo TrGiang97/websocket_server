@@ -9,12 +9,11 @@ const SSLcert = {
   ca: fs.readFileSync("SSLcert/ca_bundle.crt")
 }
 const app = express();
+const server = https.createServer(SSLcert, app);
 app.get('/', (req, res) => {
   res.redirect('https://toeicsinhvien.com/temp/recordingWS/student.html');
   // res.sendFile(path.join(__dirname, '/student.html'));
 });
-const server = https.createServer(SSLcert, app);
-
 
 const WebSocket = require('ws');
 let wss = new WebSocket.Server({ server })
