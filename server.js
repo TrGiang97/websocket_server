@@ -146,8 +146,8 @@ wss.on('connection', (ws) => {
 
 });
 
-server.listen(8080, function() {
-  console.log(`User connected`);
+server.listen(443, function() {
+  console.log(`App run on port 443`);
 });
 
 
