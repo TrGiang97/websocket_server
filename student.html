@@ -75,7 +75,7 @@
     var recorder; // Declare the recorder variable
 
     /****************************** WEBSOCKET *******************************/
-    const wsUrl = 'ecd3-118-71-92-162.ngrok-free.app'
+    const wsUrl = '65.1.254.161:8080'
     const ws = new WebSocket('wss://' + wsUrl);
 
     ws.onopen = () => {
@@ -199,15 +199,15 @@
 
     // Remove student data when disconnecting
     ws.onclose = (error) => {
-      if (error.code == 1006) {
-        window.location.href = "https://"+wsUrl
-      } else {
+      // if (error.code == 1006) {
+      //   window.location.href = "https://"+wsUrl
+      // } else {
         profileSaved = false;
         document.getElementById('name').value = '';
         document.getElementById('avatar').value = 'avatar1.png';
         document.getElementById('profileForm').style.display = 'block';
         document.getElementById('questionSection').style.display = 'none';
-      }     
+      // }     
     };
 
     /****************************** RECORDING *******************************/

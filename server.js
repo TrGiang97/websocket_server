@@ -13,7 +13,7 @@ app.get('/', (req, res) => {
   res.redirect('https://toeicsinhvien.com/temp/recordingWS/student.html');
   // res.sendFile(path.join(__dirname, '/student.html'));
 });
-const server = https.createServer(SSLcert);
+const server = https.createServer(SSLcert, app);
 
 
 const WebSocket = require('ws');
