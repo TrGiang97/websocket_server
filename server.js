@@ -1,6 +1,6 @@
 // Create Server with SSL
 const fs = require('fs')
-const https = require('http');
+const https = require('https');
 const express = require('express');
 const path = require('path');
 const SSLcert = {
@@ -13,7 +13,7 @@ app.get('/', (req, res) => {
   res.redirect('https://toeicsinhvien.com/temp/recordingWS/student.html');
   // res.sendFile(path.join(__dirname, '/student.html'));
 });
-const server = https.createServer();
+const server = https.createServer(SSLcert, app);
 
 
 const WebSocket = require('ws');
