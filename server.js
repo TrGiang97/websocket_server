@@ -1,6 +1,6 @@
 // Create Server with SSL
 const fs = require('fs')
-const https = require('https');
+const https = require('http');
 const express = require('express');
 const path = require('path');
 const SSLcert = {
@@ -13,7 +13,7 @@ app.get('/', (req, res) => {
   res.redirect('https://toeicsinhvien.com/temp/recordingWS/student.html');
   // res.sendFile(path.join(__dirname, '/student.html'));
 });
-const server = https.createServer(SSLcert, app);
+const server = http.createServer();
 
 
 const WebSocket = require('ws');
@@ -146,8 +146,8 @@ wss.on('connection', (ws) => {
 
 });
 
-server.listen(443, function() {
-  console.log(`App run on port 443`);
+server.listen(8080, function() {
+  console.log(`App run on port 8080`);
 });
 
 
