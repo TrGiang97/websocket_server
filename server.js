@@ -10,14 +10,15 @@ const SSLcert = {
 }
 const app = express();
 const server = https.createServer(SSLcert, app);
+/*-- For http response
 app.get('/', (req, res) => {
-  // res.redirect('https://toeicsinhvien.com/temp/recordingWS/student.html');
-  res.sendFile(path.join(__dirname, '/student.html'));
+  res.redirect('https://toeicsinhvien.com/temp/recordingWS/student.html');
 });
+server.on('request', app);
+*/
 
 const WebSocket = require('ws');
 let wss = new WebSocket.Server({ server })
-server.on('request', app);
 
 // Store connected students and teacher
 const users = new Map(); // Use Map to store users with unique identifiers
