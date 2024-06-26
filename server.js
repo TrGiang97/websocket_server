@@ -50,22 +50,22 @@ wss.on('connection', (ws) => {
     // console.log(data);
     // If the message is to set the user's profile, update the data
     if (data.type === 'setProfile') {
-      user.name = data.name;
-      user.avatar = data.avatar;
-      user.role = data.role;
-
       // Notify other users that a new user has connected
-      if (user.role === 'student') {
+      if (data.role === 'student') {
+        user.name = data.name;
+        user.avatar = data.avatar;
+        user.role = data.role;
         console.log(`Student ${user.name} connected`);
         const teacher = findTeacher();
         if (teacher && teacher.socket.readyState === WebSocket.OPEN) {
           teacher.socket.send(JSON.stringify({ type: 'new_user', data: { id: user.id, name: user.name, avatar: user.avatar } }));
         }
-      } else if (user.role === 'teacher') {
+      } else if (data.role === 'teacher') {
         if (findTeacher()){
           user.socket.send(JSON.stringify({ type: 'error', message: 'A teacher is already connected, please disconnect or contact with admin!' }));
           user.socket.close();
         } else {
+          user.role = data.role;
           console.log(`Teacher connected`);
           // Send the list of connected students to the teacher
           const studentList = getStudentList();
