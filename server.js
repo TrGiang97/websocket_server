@@ -84,11 +84,11 @@ wss.on('connection', (ws) => {
         teacher.socket.send(JSON.stringify({ type: 'new_record', studentId: userId, binaryData: data.binaryData }));
       } 
     } else if (data.type === 'new_question' && user.role === 'teacher') {
-      console.log(`Teacher send new question`);
       const { quesId, question, expireTime, audioData, imageData, classModule, classExercise } = data.data;
       currentQuesId = quesId
       lastQuestion = { quesId, question, expireTime, audioData, imageData, classModule, classExercise }
       broadcastToAll({ type: 'new_question', data: { quesId, question, expireTime, audioData, imageData, classModule, classExercise } });
+      console.log(`Teacher send new question id ${currentQuesId}`);
     }
   });
 
