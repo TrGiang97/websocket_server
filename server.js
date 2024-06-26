@@ -10,7 +10,8 @@ const SSLcert = {
 }
 const app = express();
 const server = https.createServer(SSLcert, app);
-/*-- For http response
+
+/*-- FOR HTTPS:...:8080 WEBPAGE --
 app.get('/', (req, res) => {
   res.redirect('https://toeicsinhvien.com/temp/recordingWS/student.html');
 });
@@ -60,11 +61,16 @@ wss.on('connection', (ws) => {
           teacher.socket.send(JSON.stringify({ type: 'new_user', data: { id: user.id, name: user.name, avatar: user.avatar } }));
         }
       } else if (user.role === 'teacher') {
-        // Send the list of connected students to the teacher
-        const studentList = getStudentList();
-        studentList.forEach(studentData => {
-          user.socket.send(JSON.stringify({ type: 'new_user', data: studentData }));
-        })
+        if (findTeacher()){
+          user.socket.send(JSON.stringify({ type: 'error', message: 'A teacher is already connected, please disconnect or contact with admin!' }));
+          user.socket.close();
+        } else {
+          // Send the list of connected students to the teacher
+          const studentList = getStudentList();
+          studentList.forEach(studentData => {
+            user.socket.send(JSON.stringify({ type: 'new_user', data: studentData }));
+          })
+        }
       }
     } else if (data.type === 'student_record' && user.role === 'student') {
       // Send the student's recorded audio to the teacher

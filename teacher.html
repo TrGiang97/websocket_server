@@ -125,6 +125,8 @@
       } else if (data.type === 'new_record') {
         // Handle student's recorded audio
         displayStudentRecord(data.studentId, Object.values(data.binaryData));
+      } else if (data.type === 'error') {
+        window.alert(data.message)
       }
     };
 
