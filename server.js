@@ -56,6 +56,7 @@ wss.on('connection', (ws) => {
 
       // Notify other users that a new user has connected
       if (user.role === 'student') {
+        console.log(`Student ${user.name} connected`);
         const teacher = findTeacher();
         if (teacher && teacher.socket.readyState === WebSocket.OPEN) {
           teacher.socket.send(JSON.stringify({ type: 'new_user', data: { id: user.id, name: user.name, avatar: user.avatar } }));
@@ -65,6 +66,7 @@ wss.on('connection', (ws) => {
           user.socket.send(JSON.stringify({ type: 'error', message: 'A teacher is already connected, please disconnect or contact with admin!' }));
           user.socket.close();
         } else {
+          console.log(`Teacher connected`);
           // Send the list of connected students to the teacher
           const studentList = getStudentList();
           studentList.forEach(studentData => {
@@ -73,12 +75,14 @@ wss.on('connection', (ws) => {
         }
       }
     } else if (data.type === 'student_record' && user.role === 'student') {
+      console.log(`Student ${user.name} send recording`);
       // Send the student's recorded audio to the teacher
       const teacher = findTeacher();
       if (teacher && teacher.socket.readyState === WebSocket.OPEN) {
         teacher.socket.send(JSON.stringify({ type: 'new_record', studentId: userId, binaryData: data.binaryData }));
       } 
     } else if (data.type === 'new_question' && user.role === 'teacher') {
+      console.log(`Teacher send new question`);
       const { question, expireTime, audioData, imageData, classModule, classExercise } = data.data;
       lastQuestion = { question, expireTime, audioData, imageData, classModule, classExercise }
       broadcastToAll({ type: 'new_question', data: { question, expireTime, audioData, imageData, classModule, classExercise } });
@@ -94,25 +98,25 @@ wss.on('connection', (ws) => {
     const user = users.get(userId);
     if (user) {
       users.delete(userId);
-
-      // Notify other users about the disconnection
-      if (user.role === 'teacher') {
-        // Notify all students about the teacher's disconnection
-        wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            const clientUser = users.get(client.id);
-            if (clientUser && clientUser.role === 'student') {
-              client.send(JSON.stringify({ type: 'teacher_disconnected' }));
-            }
-          }
-        });
-      } else {
-        // Notify the teacher that a student has disconnected
-        const teacher = findTeacher();
-        if (teacher && teacher.socket.readyState === WebSocket.OPEN) {
-          teacher.socket.send(JSON.stringify({ type: 'student_disconnected', studentId: userId }));
-        }
-      }
+      console.log(`${user.role} disconnected`);
+      // // Notify other users about the disconnection
+      // if (user.role === 'teacher') {
+      //   // Notify all students about the teacher's disconnection
+      //   wss.clients.forEach((client) => {
+      //     if (client.readyState === WebSocket.OPEN) {
+      //       const clientUser = users.get(client.id);
+      //       if (clientUser && clientUser.role === 'student') {
+      //         client.send(JSON.stringify({ type: 'teacher_disconnected' }));
+      //       }
+      //     }
+      //   });
+      // } else {
+      //   // Notify the teacher that a student has disconnected
+      //   const teacher = findTeacher();
+      //   if (teacher && teacher.socket.readyState === WebSocket.OPEN) {
+      //     teacher.socket.send(JSON.stringify({ type: 'student_disconnected', studentId: userId }));
+      //   }
+      // }
     }
   });
 
