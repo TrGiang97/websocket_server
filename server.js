@@ -26,6 +26,7 @@ const users = new Map(); // Use Map to store users with unique identifiers
 const connectedClients = new Set(); // Use Set to store connected clients
 let lastQuestion = null;
 let nextUserId = 1; // Counter for assigning unique user IDs
+let currentQuesId
 
 wss.on('connection', (ws) => {
   // Generate a unique user ID for the new connection
@@ -55,6 +56,7 @@ wss.on('connection', (ws) => {
         user.name = data.name;
         user.avatar = data.avatar;
         user.role = data.role;
+        console.log(`student ${user.name} connected`);
         const teacher = findTeacher();
         if (teacher && teacher.socket.readyState === WebSocket.OPEN) {
           teacher.socket.send(JSON.stringify({ type: 'new_user', data: { id: user.id, name: user.name, avatar: user.avatar } }));
@@ -66,6 +68,7 @@ wss.on('connection', (ws) => {
         } else {
           user.role = data.role;
           user.name = 'TOEICSINHVIEN'
+          console.log('teacher TOEICSINHVIEN connected');
           // Send the list of connected students to the teacher
           const studentList = getStudentList();
           studentList.forEach(studentData => {
@@ -73,7 +76,7 @@ wss.on('connection', (ws) => {
           })
         }
       }
-    } else if (data.type === 'student_record' && user.role === 'student') {
+    } else if (data.type === 'student_record' && user.role === 'student' && data.quesId == currentQuesId) {
       console.log(`Student ${user.name} send recording`);
       // Send the student's recorded audio to the teacher
       const teacher = findTeacher();
@@ -82,9 +85,10 @@ wss.on('connection', (ws) => {
       } 
     } else if (data.type === 'new_question' && user.role === 'teacher') {
       console.log(`Teacher send new question`);
-      const { question, expireTime, audioData, imageData, classModule, classExercise } = data.data;
-      lastQuestion = { question, expireTime, audioData, imageData, classModule, classExercise }
-      broadcastToAll({ type: 'new_question', data: { question, expireTime, audioData, imageData, classModule, classExercise } });
+      const { quesId, question, expireTime, audioData, imageData, classModule, classExercise } = data.data;
+      currentQuesId = quesId
+      lastQuestion = { quesId, question, expireTime, audioData, imageData, classModule, classExercise }
+      broadcastToAll({ type: 'new_question', data: { quesId, question, expireTime, audioData, imageData, classModule, classExercise } });
     }
   });
 

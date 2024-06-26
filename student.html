@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" href="https://static.ladipage.net/618238e170f2460020257ee0/icon-20211103073101.png">
   <title>Toeicsinhvien Student</title>
   <!-- CSS & ICON -->
   <link type="text/css" href="https://toeicsinhvien.com/public/libs/pixel-bootstrap/vendor/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
@@ -30,10 +31,10 @@
 <body style="min-height: 100vh;">
   <!----------------------------- HEADER -------------------------------->
   <div id="header" class="bg-primary text-center text-white py-3">
-    <h1 id="bigHeader">Toeicsinhvien Classroom</h1>
-    <span id="smallHeader">Ready to get exercise!</span>
+    <h1 id="bigHeader">CONNECTING...</h1>
+    <span id="smallHeader">If it takes a long time, please contact the teacher!</span>
   </div>
-  <section id="profileForm" class="text-center">
+  <section id="profileForm" class="text-center" style="display: none;">
     <h4 class="mt-3">Set Your Name</h4>
     <input type="text" id="name" class="text-center" placeholder="Enter Your Name" style="width: 80%">
     <br>
@@ -43,7 +44,7 @@
     </div>
     <button class="btn btn-success text-white mt-3" onclick="saveProfile()">Save Profile</button>
   </section>
-  <section id="questionSection">
+  <section id="questionSection" style="display: none;">
     <h2 class="text-center pt-3"><i id="audioQuestion" onClick="questionAudio.play()" class="p-3 fas fa-play-circle cursor-pointer d-none"></i> <i id="audioAnswer" onClick="recordData.play()" class="p-3 fas fa-play-circle cursor-pointer text-success d-none"></i></h2>
     <image id="imageQuestion" style="display: block;max-width: 600px;width: 80%;margin-left: auto;margin-right: auto;">
     <h2 id="question" class="text-center pt-3 px-3 px-md-5">Waiting for the teacher to send a question...</h2>
@@ -73,13 +74,15 @@
     var questionAudio, recordData;
     var profileSaved = false;
     var recorder; // Declare the recorder variable
-
+    var currentQuesId;
     /****************************** WEBSOCKET *******************************/
     const wsUrl = 'phatam.toeicsinhvien.com:8080'
     const ws = new WebSocket('wss://' + wsUrl);
 
     ws.onopen = () => {
       console.log('Connected to the server.');
+      document.getElementById('bigHeader').innerText = 'TOEICSINHVIEN'
+      document.getElementById('smallHeader').innerText = 'Ready to get exercise!'
     };
 
     ws.onmessage = (event) => {
@@ -96,12 +99,13 @@
         }
         if (lastQuestion) {
           // Handle last question from the teacher
-          const { question, expireTime, audioData, imageData, classModule, classExercise } = lastQuestion;
+          const { quesId, question, expireTime, audioData, imageData, classModule, classExercise } = lastQuestion;
+          currentQuesId = quesId
           generateNewQuestion(question, expireTime, audioData, imageData, classModule, classExercise)
         }
       } else if (data.type === 'new_question') {
         // Handle new question from the teacher
-        const { question, expireTime, audioData, imageData, classModule, classExercise } = data.data;
+        const { quesId, question, expireTime, audioData, imageData, classModule, classExercise } = data.data;
         generateNewQuestion(question, expireTime, audioData, imageData, classModule, classExercise)
       }
     };
@@ -199,6 +203,7 @@
 
     // Remove student data when disconnecting
     ws.onclose = (error) => {
+      window.alert('Kết nối bị lỗi, vui lòng tải lại trang!')
       // if (error.code == 1006) {
       //   window.location.href = "https://"+wsUrl
       // } else {
@@ -260,6 +265,7 @@
           ws.send(
             JSON.stringify({
               type: 'student_record',
+              quesId: currentQuesId,
               binaryData: recordData.binaryData,
             })
           );

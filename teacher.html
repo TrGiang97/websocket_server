@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" href="https://static.ladipage.net/618238e170f2460020257ee0/icon-20211103073101.png">
   <title>Teacher Dashboard</title>
   <!-- CSS & ICON -->
   <link type="text/css" href="https://toeicsinhvien.com/public/libs/pixel-bootstrap/vendor/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
@@ -130,6 +131,10 @@
       }
     };
 
+    ws.onclose = (error) => {   
+      window.alert('Kết nối bị lỗi, vui lòng tải lại trang!')
+    };
+
     let studentIndex = 1; // Global variable to store the current index value
     // Helper function to add students to the student list
     function addStudentToList(id, name, avatar) {
@@ -223,6 +228,8 @@
       setTimeout(() => document.getElementById("sendQuestion").disabled = false, 3000)
       const questionInput = document.getElementById('questionInput');
       const question = questionInput.value.trim();
+      // Create questionid
+      const quesId = new Date().getTime();
       // Get template
       const classModule = document.getElementById("classModule").value
       const classExercise = document.getElementById("exercise").value
@@ -246,7 +253,7 @@
       ws.send(
         JSON.stringify({
           type: 'new_question',
-          data: {question, expireTime, audioData, imageData, classModule, classExercise},
+          data: {quesId, question, expireTime, audioData, imageData, classModule, classExercise},
         })
       )
 
