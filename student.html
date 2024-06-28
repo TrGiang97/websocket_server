@@ -74,7 +74,6 @@
     var questionAudio, recordData;
     var profileSaved = false;
     var recorder; // Declare the recorder variable
-    var currentQuesId;
     /****************************** WEBSOCKET *******************************/
     const wsUrl = 'phatam.toeicsinhvien.com:8080'
     const ws = new WebSocket('wss://' + wsUrl);
@@ -99,13 +98,12 @@
         }
         if (lastQuestion) {
           // Handle last question from the teacher
-          const { quesId, question, expireTime, audioData, imageData, classModule, classExercise } = lastQuestion;
-          currentQuesId = quesId
+          const { question, expireTime, audioData, imageData, classModule, classExercise } = lastQuestion;
           generateNewQuestion(question, expireTime, audioData, imageData, classModule, classExercise)
         }
       } else if (data.type === 'new_question') {
         // Handle new question from the teacher
-        const { quesId, question, expireTime, audioData, imageData, classModule, classExercise } = data.data;
+        const { question, expireTime, audioData, imageData, classModule, classExercise } = data.data;
         generateNewQuestion(question, expireTime, audioData, imageData, classModule, classExercise)
       }
     };
@@ -265,7 +263,6 @@
           ws.send(
             JSON.stringify({
               type: 'student_record',
-              quesId: currentQuesId,
               binaryData: recordData.binaryData,
             })
           );

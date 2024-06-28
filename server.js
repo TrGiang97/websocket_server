@@ -26,7 +26,6 @@ const users = new Map(); // Use Map to store users with unique identifiers
 const connectedClients = new Set(); // Use Set to store connected clients
 let lastQuestion = null;
 let nextUserId = 1; // Counter for assigning unique user IDs
-let currentQuesId
 
 wss.on('connection', (ws) => {
   // Generate a unique user ID for the new connection
@@ -76,7 +75,7 @@ wss.on('connection', (ws) => {
           })
         }
       }
-    } else if (data.type === 'student_record' && user.role === 'student' && data.quesId == currentQuesId) {
+    } else if (data.type === 'student_record' && user.role === 'student') {
       console.log(`Student ${user.name} send recording`);
       // Send the student's recorded audio to the teacher
       const teacher = findTeacher();
@@ -84,11 +83,10 @@ wss.on('connection', (ws) => {
         teacher.socket.send(JSON.stringify({ type: 'new_record', studentId: userId, binaryData: data.binaryData }));
       } 
     } else if (data.type === 'new_question' && user.role === 'teacher') {
-      const { quesId, question, expireTime, audioData, imageData, classModule, classExercise } = data.data;
-      currentQuesId = quesId
-      lastQuestion = { quesId, question, expireTime, audioData, imageData, classModule, classExercise }
-      broadcastToAll({ type: 'new_question', data: { quesId, question, expireTime, audioData, imageData, classModule, classExercise } });
-      console.log(`Teacher send new question id ${currentQuesId}`);
+      const { question, expireTime, audioData, imageData, classModule, classExercise } = data.data;
+      lastQuestion = { question, expireTime, audioData, imageData, classModule, classExercise }
+      broadcastToAll({ type: 'new_question', data: { question, expireTime, audioData, imageData, classModule, classExercise } });
+      console.log(`Teacher send new question id`);
     }
   });
 

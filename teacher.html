@@ -228,8 +228,7 @@
       setTimeout(() => document.getElementById("sendQuestion").disabled = false, 3000)
       const questionInput = document.getElementById('questionInput');
       const question = questionInput.value.trim();
-      // Create questionid
-      const quesId = new Date().getTime();
+
       // Get template
       const classModule = document.getElementById("classModule").value
       const classExercise = document.getElementById("exercise").value
@@ -253,7 +252,7 @@
       ws.send(
         JSON.stringify({
           type: 'new_question',
-          data: {quesId, question, expireTime, audioData, imageData, classModule, classExercise},
+          data: {question, expireTime, audioData, imageData, classModule, classExercise},
         })
       )
 
