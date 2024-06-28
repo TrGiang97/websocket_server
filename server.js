@@ -86,7 +86,7 @@ wss.on('connection', (ws) => {
       const { question, expireTime, audioData, imageData, classModule, classExercise } = data.data;
       lastQuestion = { question, expireTime, audioData, imageData, classModule, classExercise }
       broadcastToAll({ type: 'new_question', data: { question, expireTime, audioData, imageData, classModule, classExercise } });
-      console.log(`Teacher send new question id`);
+      console.log(`Teacher send new question`);
     }
   });
 
