@@ -81,7 +81,7 @@ wss.on('connection', (ws) => {
       const teacher = findTeacher();
       if (teacher && teacher.socket.readyState === WebSocket.OPEN) {
         teacher.socket.send(JSON.stringify({ type: 'new_record', studentId: userId, binaryData: data.binaryData }));
-      } 
+      }
     } else if (data.type === 'new_question' && user.role === 'teacher') {
       const { question, expireTime, audioData, imageData, classModule, classExercise } = data.data;
       lastQuestion = { question, expireTime, audioData, imageData, classModule, classExercise }

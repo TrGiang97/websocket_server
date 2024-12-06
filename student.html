@@ -75,8 +75,8 @@
     var profileSaved = false;
     var recorder; // Declare the recorder variable
     /****************************** WEBSOCKET *******************************/
-    const wsUrl = 'phatam.toeicsinhvien.com:8080'
-    const ws = new WebSocket('wss://' + wsUrl);
+    const wsUrl = '18.139.183.160:8080'
+    const ws = new WebSocket('ws://' + wsUrl);
 
     ws.onopen = () => {
       console.log('Connected to the server.');
