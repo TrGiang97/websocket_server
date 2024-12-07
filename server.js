@@ -11,7 +11,7 @@ const SSLcert = {
 const app = express();
 const server = https.createServer(SSLcert, app);
 
-/*-- FOR HTTPS:...:8080 WEBPAGE --
+/*-- FOR HTTPS:...:8080 WEBPAGE --/
 app.get('/', (req, res) => {
   res.redirect('https://toeicsinhvien.com/temp/recordingWS/student.html');
 });
