@@ -76,7 +76,7 @@
     var recorder; // Declare the recorder variable
     /****************************** WEBSOCKET *******************************/
     const wsUrl = '18.139.183.160:8080'
-    const ws = new WebSocket('ws://' + wsUrl);
+    const ws = new WebSocket('wss://' + wsUrl);
 
     ws.onopen = () => {
       console.log('Connected to the server.');
