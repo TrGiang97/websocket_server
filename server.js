@@ -4,9 +4,8 @@ const https = require('https');
 const express = require('express');
 const path = require('path');
 const SSLcert = {
-  key: fs.readFileSync("SSLcert/private.key"),
-  cert: fs.readFileSync("SSLcert/certificate.crt"),
-  ca: fs.readFileSync("SSLcert/ca_bundle.crt")
+  key: fs.readFileSync("/etc/letsencrypt/live/phatam.toeicsinhvien.com/privkey.pem"),
+  cert: fs.readFileSync("/etc/letsencrypt/live/phatam.toeicsinhvien.com/fullchain.pem"),
 }
 const app = express();
 const server = https.createServer(SSLcert, app);
