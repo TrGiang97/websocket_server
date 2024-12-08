@@ -98,7 +98,7 @@
     if (localStorage.role != 'admin') window.location.href = "./student.html"
     // WebSocket connection to the server
     // const ws = new WebSocket('ws://localhost:8080');
-    const ws = new WebSocket('wss://dec8-118-68-238-193.ngrok-free.app:8080/');
+    const ws = new WebSocket('ws://localhost:8080/');
 
     ws.onopen = () => {
       console.log('Connected to the server.');

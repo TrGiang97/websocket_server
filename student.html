@@ -75,8 +75,8 @@
     var profileSaved = false;
     var recorder; // Declare the recorder variable
     /****************************** WEBSOCKET *******************************/
-    const wsUrl = 'dec8-118-68-238-193.ngrok-free.app'
-    const ws = new WebSocket('wss://' + wsUrl);
+    const wsUrl = 'localhost:8080'
+    const ws = new WebSocket('ws://' + wsUrl);
 
     ws.onopen = () => {
       console.log('Connected to the server.');
