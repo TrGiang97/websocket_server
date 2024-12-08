@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Teacher's Dashboard</title>
+</head>
+<body>
+  <h1>Teacher's Dashboard</h1>
+  <h2>Students</h2>
+  <ul id="studentList"></ul>
+
+  <h2>Question</h2>
+  <div>
+    <input type="text" id="questionInput" placeholder="Enter your question">
+    <button onclick="sendQuestion()">Send Question</button>
+  </div>
+
+  <script>
+    // WebSocket connection to the server
+    const ws = new WebSocket('ws://localhost:8080');
+
+    ws.onopen = () => {
+      console.log('Connected to the server.');
+      ws.send(
+        JSON.stringify({
+          type: 'setProfile',
+          name: '',
+          avatar: '',
+          role: 'teacher'
+        })
+      );
+    };
+
+     ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'new_user' && data.role !== 'teacher') {
+        // Handle new student joining
+        const { data: studentData } = data;
+        const { id, name, avatar } = studentData;
+        addStudentToList(id, name, avatar);
+      } else if (data.type === 'student_disconnected') {
+        // Handle student disconnection
+        const { studentId } = data;
+        removeStudentFromList(studentId);
+      } else if (data.type === 'new_record') {
+        // Handle student's recorded audio
+        displayStudentRecord(data.studentId, Object.values(data.binaryData));
+      }
+    };
+
+    // Helper function to add students to the student list
+    function addStudentToList(id, name, avatar) {
+      const studentList = document.getElementById('studentList');
+      const li = document.createElement('li');
+      li.innerHTML = <img src="${avatar}" alt="Avatar" width="30" height="30"> ${name} <div></div>;
+      li.setAttribute('id', student-${id}); // Set ID for the li element
+      studentList.appendChild(li);
+    }
+
+    // Helper function to remove students from the student list
+    function removeStudentFromList(studentId) {
+      const studentElement = document.getElementById(student-${studentId});
+      if (studentElement) {
+        studentElement.remove();
+      }
+    }
+
+    // Helper function to display student record
+    function displayStudentRecord(studentId, binaryData) {
+      const audioData = new Uint8Array(binaryData);
+      console.log(audioData);
+      const audioBlob = new Blob([audioData], { type: 'audio/wav' })
+      const audioUrl = URL.createObjectURL(audioBlob);
+      document.querySelector(#student-${studentId} div).innerHTML = <audio controls="" style="height:30px"><source src="${audioUrl}"></audio>;
+    }
+
+    // Send Question to Student
+    function sendQuestion() {
+      const questionInput = document.getElementById('questionInput');
+      const question = questionInput.value.trim();
+      if (!question) {
+        alert('Please enter a question.');
+        return;
+      }
+      // Send the question to the server
+      ws.send(JSON.stringify({ type: 'new_question', data: { question } }));
+      // Clear the input field
+      questionInput.value = '';
+    }
+  </script>
+</body>
+</html>

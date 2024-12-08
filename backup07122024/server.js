@@ -1,5 +1,25 @@
+// Create Server with SSL
+const fs = require('fs')
+const https = require('https');
+const express = require('express');
+const path = require('path');
+const SSLcert = {
+  key: fs.readFileSync("SSLcert/private.key"),
+  cert: fs.readFileSync("SSLcert/certificate.crt"),
+  ca: fs.readFileSync("SSLcert/ca_bundle.crt")
+}
+const app = express();
+const server = https.createServer(SSLcert, app);
+
+/*-- FOR HTTPS:...:8080 WEBPAGE --/
+app.get('/', (req, res) => {
+  res.redirect('https://toeicsinhvien.com/temp/recordingWS/student.html');
+});
+server.on('request', app);
+*/
+
 const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: 8080 });
+let wss = new WebSocket.Server({ server })
 
 // Store connected students and teacher
 const users = new Map(); // Use Map to store users with unique identifiers
@@ -135,6 +155,10 @@ wss.on('connection', (ws) => {
     return studentList;
   }
 
+});
+
+server.listen(8080, function() {
+  console.log(`App run on port 8080`);
 });
 
 
