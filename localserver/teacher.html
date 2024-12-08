@@ -1,22 +1,104 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Teacher's Dashboard</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" href="https://static.ladipage.net/618238e170f2460020257ee0/icon-20211103073101.png">
+  <title>Teacher Dashboard</title>
+  <!-- CSS & ICON -->
+  <link type="text/css" href="https://toeicsinhvien.com/public/libs/pixel-bootstrap/vendor/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link type="text/css" href="https://toeicsinhvien.com/public/libs/pixel-bootstrap/css/pixel.css" rel="stylesheet">
+  <style>
+    .cursor-pointer {cursor: pointer;}
+    .text-middle {margin-top: auto; margin-bottom: auto;}
+    ::-webkit-scrollbar {display: none;}
+  </style>
 </head>
 <body>
-  <h1>Teacher's Dashboard</h1>
-  <h2>Students</h2>
-  <ul id="studentList"></ul>
+  <div id="header" class="bg-primary text-center text-white py-3">
+    <h1>Teacher Dashboard</h1>
+    <span>Manange student online</span>
+  </div>
+  <div id="body" class="container-fluid pt-3">
+    <div class="row">
+      <div class="col-6">
+        <h3 id="student_header">STUDENTS LIST</h3>
+        <table class="table" style="max-height: calc(100vh - 200px);">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Name</th>
+              <th scope="col">Record Audio</th>
+            </tr>
+          </thead>
+          <tbody id="studentList">
 
-  <h2>Question</h2>
-  <div>
-    <input type="text" id="questionInput" placeholder="Enter your question">
-    <button onclick="sendQuestion()">Send Question</button>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="col-6">
+        <h3>ASSIGN QUESTION</h3>
+        
+        <label>Select Template</label>
+        <div class="row">
+        <div class="col-4 p-1">
+          <select class="form-control" id="classModule" onchange="switchModule(this)">
+            <option value="" selected disabled>Chọn buổi</option>
+            <option value="1">Buổi 1 </option>
+            <option value="2">Buổi 2 </option>
+            <option value="3">Buổi 3 </option>
+            <option value="4">Buổi 4 </option>
+            <option value="5">Buổi 5 </option>
+            <option value="6">Buổi 6 </option>
+            <option value="7">Buổi 7 </option>
+            <option value="8">Buổi 8 </option>
+            <option value="9">Buổi 9 </option>
+            <option value="10">Buổi 10 </option>
+            <option value="11">Buổi 11 </option>
+            <option value="12">Buổi 12 </option>
+            <option value="13">Buổi 13 </option>
+            <option value="14">Buổi 14 </option>
+            <option value="15">Buổi 15 </option>
+            <option value="16">Buổi 16 </option>
+          </select>
+        </div>
+        <div class="col-8 p-1">
+          <select class="form-control" id="exercise">
+            <option value="" selected disabled>Chọn bài tập</option>
+          </select>
+        </div>
+      </div>
+        <div class="mt-2">
+          <label>Enter Question Text</label>
+        </div>
+        <input type="text" class="form-control " id="questionInput" placeholder="">
+        <div class="mt-2">
+          <label>Select Image</label>
+          <input type="file" class="form-control " id="imageFileInput">
+        </div>
+        <div class="mt-2">
+          <label>Select Audio</label>
+          <input type="file" class="form-control " id="audioFileInput">
+          <audio controls class="" id="audioPlayer" style="height: 30px;width: 100%;">
+            Your browser does not support the audio element.
+          </audio>
+        <div class="d-flex mt-2">
+          <label class="d-inline text-middle">Select Time</label>
+          <input type="number" class="form-control mx-2" min=0 value=0 style="width: 60px;" id="minTime"><span class="text-middle">phút</span>
+          <input type="number" class="form-control mx-2" min=0 value=0 style="width: 60px;" id="secondTime"><span class="text-middle">giây</span>
+        </div>
+        <button class="btn btn-outline-danger d-inline mt-3 w-75" id="sendQuestion" onclick="sendQuestion()">Send Question</button>
+        <button class="btn btn-outline-dark d-inline mt-3" id="sendQuestion" onclick="resetQuestion()">Reset</button>
+      </div>
+      
   </div>
 
   <script>
+    if (localStorage.role != 'admin') window.location.href = "./student.html"
     // WebSocket connection to the server
-    const ws = new WebSocket('ws://localhost:8080');
+    // const ws = new WebSocket('ws://localhost:8080');
+    const ws = new WebSocket('ws://localhost:8080/');
 
     ws.onopen = () => {
       console.log('Connected to the server.');
@@ -27,10 +109,10 @@
           avatar: '',
           role: 'teacher'
         })
-      );
+        );
     };
 
-     ws.onmessage = (event) => {
+    ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === 'new_user' && data.role !== 'teacher') {
         // Handle new student joining
@@ -44,47 +126,167 @@
       } else if (data.type === 'new_record') {
         // Handle student's recorded audio
         displayStudentRecord(data.studentId, Object.values(data.binaryData));
+      } else if (data.type === 'error') {
+        window.alert(data.message)
       }
     };
 
+    ws.onclose = (error) => {   
+      window.alert('Kết nối bị lỗi, vui lòng tải lại trang!')
+    };
+
+    let studentIndex = 1; // Global variable to store the current index value
     // Helper function to add students to the student list
     function addStudentToList(id, name, avatar) {
       const studentList = document.getElementById('studentList');
-      const li = document.createElement('li');
-      li.innerHTML = <img src="${avatar}" alt="Avatar" width="30" height="30"> ${name} <div></div>;
-      li.setAttribute('id', student-${id}); // Set ID for the li element
-      studentList.appendChild(li);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td style="width: 30px;">${studentIndex}</td><td><img src="assets/images/${avatar}.svg" alt="Avatar" width="30" height="30"><span class="text-middle"> ${name}</span></td><td></td>`;
+      tr.setAttribute('id', `student-${id}`); // Set ID for the tr element
+      studentList.appendChild(tr);
+      document.getElementById("student_header").innerHTML = `STUDENT LIST (${studentIndex})`
+      studentIndex++;
     }
 
     // Helper function to remove students from the student list
     function removeStudentFromList(studentId) {
-      const studentElement = document.getElementById(student-${studentId});
+      const studentElement = document.getElementById(`student-${studentId}`);
       if (studentElement) {
         studentElement.remove();
+        reIndexStudents()
       }
+    }
+
+    // Function to re-index the students after a user disconnects
+    function reIndexStudents() {
+      const studentRows = document.querySelectorAll('#studentList tr');
+      studentIndex = 1; // Reset the index
+      studentRows.forEach((row) => {
+        row.cells[0].textContent = studentIndex; // Update the index cell content
+        studentIndex++; // Increment the index for the next row
+      });
+      document.getElementById("student_header").innerHTML = `STUDENT LIST (${studentIndex})`
     }
 
     // Helper function to display student record
     function displayStudentRecord(studentId, binaryData) {
       const audioData = new Uint8Array(binaryData);
-      console.log(audioData);
       const audioBlob = new Blob([audioData], { type: 'audio/wav' })
       const audioUrl = URL.createObjectURL(audioBlob);
-      document.querySelector(#student-${studentId} div).innerHTML = <audio controls="" style="height:30px"><source src="${audioUrl}"></audio>;
+      document.querySelector(`#student-${studentId} td:nth-child(3)`).innerHTML = `<audio controls="" style="height:30px"><source src="${audioUrl}"></audio>`;
     }
 
+
+    // Select template module
+    var data = [
+      [], //null
+      [],
+      [],
+      [],
+      [],
+      ["1. Excuse me. I’m looking for Lee’s lighting.","2. Just keep going. It’s down the street on the left side.","3. Do you know where Mr. Lee is?","4. He’s left  for the day.","5. What does he do  for a living?","6. He’s in the lighting business.","7. Come in! I’m Alan Lee ","8. Nice to meet you Mr. Lee"],
+      ["1. Wake up! We overslept!","2. When is the deadline?","3. 1p.m, we’re running short on time.","4. I’ve been waiting for a long time.","5. Sorry that I’m late.","6. Why are you so late?","7. The heavy traffic held me up.","8. Is everyone here for the meeting? ","9. We are about to start, where is Tom?","10. Where are you? You’re late!","11. I'm  on  my  way!"],
+      [" 1.Good afternoon, Honda marketing. How can i help you? ","2. Yes, I would like to buy a car. ","3. May I park here? ","4. No, you’re not allowed to park here.","5. You left your book  in my car.","6. Can you drop it by my house?","7. When will you be back? ","8. I’ll be back  in an hour.","9a. A lot of people ask me","9b. if it is possible to sound","9c. like a native speaker.","9. A lot of people ask me if it is possible to sound like a native speaker."],
+      ["1. Do you wanna","2. No, I’m sick","3. Sure, let's go next week.","4. What did they say","5. They said it’s gonna rain today","6. How do you like the weather","7. Fed up with the rain","8. How was your trip","9. We had a good time despite the rain","10. Dad, you forgot my birthday party"],
+      ["1Tom, what did you do today","2work up","3what are you doing","4nothing","5Should we get dinner","6cookies","7gone","8split the check","9it’s on me","10sleep","11Go ahead","12I've try"],
+      ["1. Which one would you like?","2. I can’t make up my mind.","3. How many sizes do you have?","4. This lamp comes in 3 sizes: Small, Medium & Large.","5. How may I help you?","6. I’d like one chocolate donut please.","7. Excuse me. Do you have change for a dollar? ","8. Yes, here you are.","10. Can i buy that one?"],
+      ["1. May I speak to Adele please?","2. This is Adele.","3. Hi. This is Bill from your English class.","4. Hi Ali, are we still on for today?","5. Yes, let’s meet at the theater at 7 p.m.","6. Hey, I’m going to West Mall.","7. Come on. I’ll drop you off.","8. Bye, thanks for dropping me off","9. Tonight, I’m meeting up with some friends","10. in the West Village for pizza. ","11. We may stay in the West Village afterwards."],
+      ["1. Do you mind if  I join you?","2. Of course not, have a seat.","3. When did you start this restaurant?","4. 30 years  ago.","5. Tell me about yourself?","6. I was a taxi driver for 3 years and I’m a hard worker. ","7. On top of that, I can speak 3 languages.","8. Here’s your uniform. You can put it on in the changing room. ","9. Sure. Thanks a lot ","10. You look so tired.","11. Yes, I’m under a lot of pressure this month"],
+      ["1. Could you drop this off  at the shoe repair shop?","2. Certainly. It will be ready on Thursday.","3. How’s the project coming along?","4. Great, I’m ahead of schedule.","5. Fine, I’m on schedule.","6. Not good, I’m behind schedule.","7. Can we meet today? ","8. Sorry, I’m tied up. How about tomorrow?","9. May I speak to Tom Smith?","10. I’m sorry, he just stepped out. He should be back  in a few minutes.","11. Sue Smith! What a surprise to see you!","12.Yeah, I’m so surprised to run into you here."],
+      ["1. How long are you guys going away for?","2. 2 nights. We'll be back the day after tomorrow.","3. It’s a long way. Let’s take turns driving. - Okay","4. How's your sandcastle coming along?","5. So far so good.","6. We bought you this gift.","7. Thank you, but you shouldn’t have.","8. It's our pleasure.","9. Does it work?","10. I’ll plug  it in for you.","11. Is it in good condition?","12. Don’t worry. It’s  in perfect condition."],
+      ["1. Oh, no! My hair! It’s ruined.","2. It’s not the end of the world. Your hair will grow back.","3. When will my hair grow back?","4. I know how you feel. We are in the same boat. ","5. Excuse me.","6. That’s okay. What can I do for you?","7. Sorry to interrupt.Can I talk to you for a moment?","8. Do you know where Mr. Smith is?","9. I have no idea. ","10. Can you call me back later?","11. Yes, I’ll call you back later. When is a good time?"],
+      ["1. Can I speak to the manager?","2. Yes, can I put you on hold for a minute?","3. Who's that on the phone?","4. It’s for you. It’s your wife.","5. I’m going to Hanoi city.","6. For how long? ","7. For good, I got a job there.","8. Not working today?","9. No, I’m sick, I took the day off.","10. What's going on?","11. I took it apart, now I can’t put it back together."]
+    ]
+
+    function switchModule(event){
+      const classModule = event.value
+      let innerHtml = '<option value="" selected disabled>Chọn bài tập</option>'
+      data[classModule].forEach((item, index) => innerHtml += `<option value=${index+1}>${item}</option>`)
+      document.getElementById("exercise").innerHTML = innerHtml
+    }
+
+
+    // Function to handle file selection
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      const audioPlayer = document.getElementById('audioPlayer');
+
+      if (file) {
+        const objectURL = URL.createObjectURL(file);
+        audioPlayer.src = objectURL;
+      } else {
+        audioPlayer.src = '';
+      }
+    }
+
+    // Add event listener to the file input
+    const audioInput = document.getElementById('audioFileInput');
+    audioInput.addEventListener('change', handleFileSelect);
+
     // Send Question to Student
-    function sendQuestion() {
+    async function sendQuestion() {
+      document.getElementById("sendQuestion").disabled = true;
+      setTimeout(() => document.getElementById("sendQuestion").disabled = false, 3000)
       const questionInput = document.getElementById('questionInput');
       const question = questionInput.value.trim();
-      if (!question) {
-        alert('Please enter a question.');
-        return;
+
+      // Get template
+      const classModule = document.getElementById("classModule").value
+      const classExercise = document.getElementById("exercise").value
+
+      // Get the selected file
+      const audioFileInput = document.getElementById('audioFileInput');
+      const audioFile = audioFileInput.files[0];
+      audioData = await readFileAsArrayBuffer(audioFile)
+
+      imageFileInput = document.getElementById('imageFileInput');
+      imageFile = imageFileInput.files[0];
+      imageData = await readFileAsArrayBuffer(imageFile)
+
+      const minTime = document.getElementById("minTime").value
+      const secondTime = document.getElementById("secondTime").value
+      const countTime = parseInt(minTime)*60 + parseInt(secondTime)
+      const now = new Date()
+      const end = new Date(now.getTime() + countTime*1000)
+      const expireTime = end.getTime()
+
+      ws.send(
+        JSON.stringify({
+          type: 'new_question',
+          data: {question, expireTime, audioData, imageData, classModule, classExercise},
+        })
+      )
+
+      let recordDoms = document.querySelectorAll('#studentList > tr > td:nth-child(3)')
+      for (let i = 0; i < recordDoms.length; i++) {
+        recordDoms[i].innerHTML = ''
       }
-      // Send the question to the server
-      ws.send(JSON.stringify({ type: 'new_question', data: { question } }));
-      // Clear the input field
-      questionInput.value = '';
+    }
+
+    async function readFileAsArrayBuffer(file) {
+      return new Promise((resolve, reject) => {
+        if (!file) resolve(null)
+
+        const reader = new FileReader();
+
+        reader.onload = event => {
+          const unit8Data = new Uint8Array(event.target.result);
+          resolve(unit8Data);
+        };
+
+        reader.onerror = event => {
+          reject(new Error('File read error.'));
+        };
+
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    function resetQuestion(){
+      document.getElementById("classModule").value = ""
+      document.getElementById("exercise").value = ""
+      document.getElementById("questionInput").value = ""
+      document.getElementById("imageFileInput").value = ""
+      document.getElementById("audioFileInput").value = ""
     }
   </script>
 </body>
