@@ -81,7 +81,14 @@ wss.on('connection', (ws) => {
       if (teacher && teacher.socket.readyState === WebSocket.OPEN) {
         teacher.socket.send(JSON.stringify({ type: 'new_record', studentId: userId, binaryData: data.binaryData }));
       }
-    } else if (data.type === 'new_question' && user.role === 'teacher') {
+    } else if (data.type === 'student_text' && user.role === 'student') {
+      console.log(`Student ${user.name} send text`);
+      // Send the student's recorded audio to the teacher
+      const teacher = findTeacher();
+      if (teacher && teacher.socket.readyState === WebSocket.OPEN) {
+        teacher.socket.send(JSON.stringify({ type: 'new_text', studentId: userId, text: data.text }));
+      }
+    }else if (data.type === 'new_question' && user.role === 'teacher') {
       const { question, expireTime, audioData, imageData, classModule, classExercise } = data.data;
       lastQuestion = { question, expireTime, audioData, imageData, classModule, classExercise }
       broadcastToAll({ type: 'new_question', data: { question, expireTime, audioData, imageData, classModule, classExercise } });

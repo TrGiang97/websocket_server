@@ -13,3 +13,7 @@ Chạy trên ec2
 
 Chuyển code lên ec2 dùng git (git add,commit,push in 1 line)
 - git cmp "messageabc"
+
+
+Chỉnh tự động bật tắt: Vào lambda trigger event >> Event bridge schedule
+Chỉnh tự động bật app khi khởi động server: Vào chatgpt tz.yafeeds => Tìm pm2 auto start app
