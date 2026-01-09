@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" href="https://static.ladipage.net/618238e170f2460020257ee0/icon-20211103073101.png">
+  <title>Teacher Dashboard</title>
+  <!-- CSS & ICON -->
+  <link type="text/css" href="https://toeicsinhvien.com/public/libs/pixel-bootstrap/vendor/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link type="text/css" href="https://toeicsinhvien.com/public/libs/pixel-bootstrap/css/pixel.css" rel="stylesheet">
+  <style>
+    .cursor-pointer {cursor: pointer;}
+    .text-middle {margin-top: auto; margin-bottom: auto;}
+    ::-webkit-scrollbar {display: none;}
+  </style>
+</head>
+<body>
+  <div id="header" class="bg-primary text-center text-white py-3">
+    <h1>Teacher Dashboard</h1>
+    <span>Manange student online</span>
+  </div>
+  <div id="body" class="container-fluid pt-3">
+    <div class="row">
+      <div class="col-9">
+        <h3 id="student_header">STUDENTS LIST</h3>
+        <table class="table" style="max-height: calc(100vh - 200px);">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col" style="width: 250px;">Name</th>
+              <th scope="col">Student Answer <button onclick="copyAllAnswer()" class="btn btn-sm rounded-circle btn-primary ml-3"></th>
+            </tr>
+          </thead>
+          <tbody id="studentList">
+
+          </tbody>
+        </table>
+      </div>
+
+      <div class="col-3">
+        <h3>ASSIGN QUESTION</h3>
+        
+        <label>Select Template</label>
+        <div class="row">
+        <div class="col-4 p-1">
+          <select class="form-control" id="classModule" onchange="switchModule(this)">
+            <option value="" selected disabled>Chọn buổi</option>
+            <option value="0">Question 12 - Buổi 2 </option>
+            <option value="1">Question 34 - Buổi 1 </option>
+            <option value="2">Question 34 - Buổi 2 </option>
+            <option value="3">Question 56 - Buổi 1 </option>
+            <option value="4">Question 7 - Buổi 1 </option>
+            <option value="5">Question 7 - Buổi 2 </option>
+            <option value="6">Question 8910 - Buổi 1 </option>
+            <option value="7">Question 8910 - Buổi 2 </option>
+            <option value="8">Question 11 - Buổi 1 </option>
+            <option value="9">Question 11 - Buổi 2 </option>
+            <option value="10">Question 11 - Buổi 3 </option>
+            <option value="11">Speaking Test </option>
+            <!-- <option value="11">Writing 1-5 Buổi 1 </option>
+            <option value="12">Writing 1-5 Buổi 2 </option>
+            <option value="13">Writing 6-7 Buổi 1 </option>
+            <option value="14">Writing 6-7 Buổi 2 </option>
+            <option value="15">Writing 6-7 Buổi 3 </option>
+            <option value="16">Writing 8 Buổi 1 </option>
+            <option value="17">Writing 8 Buổi 2 </option>
+            <option value="18">Writing 8 Buổi 3 </option>
+            <option value="19">Writing Test </option> -->
+          </select>
+        </div>
+        <div class="col-8 p-1">
+          <select class="form-control" id="exercise">
+            <option value="" selected disabled>Chọn bài tập</option>
+          </select>
+        </div>
+      </div>
+        <div class="mt-2">
+          <label>Enter Question Text</label>
+        </div>
+        <input type="text" class="form-control " id="questionInput" placeholder="">
+        <div class="mt-2">
+          <label>Select Image</label>
+          <input type="file" class="form-control " id="imageFileInput">
+        </div>
+        <div class="mt-2">
+          <label>Select Audio</label>
+          <input type="file" class="form-control " id="audioFileInput">
+          <audio controls class="" id="audioPlayer" style="height: 30px;width: 100%;">
+            Your browser does not support the audio element.
+          </audio>
+        <div class="d-flex mt-2">
+          <label class="d-inline text-middle">Select Time</label>
+          <input type="number" class="form-control mx-2" min=0 value=0 style="width: 60px;" id="minTime"><span class="text-middle">phút</span>
+          <input type="number" class="form-control mx-2" min=0 value=0 style="width: 60px;" id="secondTime"><span class="text-middle">giây</span>
+        </div>
+        <button class="btn btn-outline-danger d-inline mt-3 w-75" id="sendQuestion" onclick="sendQuestion()">Send Question</button>
+        <button class="btn btn-outline-dark d-inline mt-3" id="sendQuestion" onclick="resetQuestion()">Reset</button>
+      </div>
+      
+  </div>
+  <script src="data.js?v=11"></script>
+  <script>
+    if (localStorage.role != 'admin') window.location.href = "./index.html"
+    // WebSocket connection to the server
+    const ws = new WebSocket('wss://phatam.toeicsinhvien.com:8080/');
+
+    ws.onopen = () => {
+      console.log('Connected to the server.');
+      ws.send(
+        JSON.stringify({
+          type: 'setProfile',
+          name: '',
+          avatar: '',
+          role: 'teacher'
+        })
+        );
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'new_user' && data.role !== 'teacher') {
+        // Handle new student joining
+        const { data: studentData } = data;
+        const { id, name, avatar } = studentData;
+        addStudentToList(id, name, avatar);
+      } else if (data.type === 'student_disconnected') {
+        // Handle student disconnection
+        const { studentId } = data;
+        removeStudentFromList(studentId);
+      } else if (data.type === 'new_record') {
+        // Handle student's recorded audio
+        displayStudentRecord(data.studentId, Object.values(data.binaryData));
+      } else if (data.type === 'new_text') {
+        // Handle student's recorded audio
+        displayStudentText(data.studentId, data.text);
+      } else if (data.type === 'error') {
+        window.alert(data.message)
+      }
+    };
+
+    ws.onclose = (error) => {   
+      window.alert('Kết nối bị lỗi, vui lòng tải lại trang!')
+    };
+
+    let studentIndex = 1; // Global variable to store the current index value
+    // Helper function to add students to the student list
+    function addStudentToList(id, name, avatar) {
+      const studentList = document.getElementById('studentList');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td style="width: 30px;">${studentIndex}</td><td><img src="assets/images/${avatar}.svg" alt="Avatar" width="30" height="30"><span class="text-middle"> ${name}</span></td><td onclick="copyStudentAnswer(event)"></td>`;
+      tr.setAttribute('id', `student-${id}`); // Set ID for the tr element
+      studentList.appendChild(tr);
+      document.getElementById("student_header").innerHTML = `STUDENT LIST (${studentIndex})`
+      studentIndex++;
+    }
+
+    // Helper function to remove students from the student list
+    function removeStudentFromList(studentId) {
+      const studentElement = document.getElementById(`student-${studentId}`);
+      if (studentElement) {
+        studentElement.remove();
+        reIndexStudents()
+      }
+    }
+
+    // Function to re-index the students after a user disconnects
+    function reIndexStudents() {
+      const studentRows = document.querySelectorAll('#studentList tr');
+      studentIndex = 1; // Reset the index
+      studentRows.forEach((row) => {
+        row.cells[0].textContent = studentIndex; // Update the index cell content
+        studentIndex++; // Increment the index for the next row
+      });
+      document.getElementById("student_header").innerHTML = `STUDENT LIST (${studentIndex})`
+    }
+
+    // Helper function to display student record
+    function displayStudentRecord(studentId, binaryData) {
+      const audioData = new Uint8Array(binaryData);
+      const audioBlob = new Blob([audioData], { type: 'audio/wav' })
+      const audioUrl = URL.createObjectURL(audioBlob);
+      document.querySelector(`#student-${studentId} td:nth-child(3)`).innerHTML = `<audio controls="" style="height:30px"><source src="${audioUrl}"></audio>`;
+    }
+
+    function displayStudentText(studentId, text){
+      document.querySelector(`#student-${studentId} td:nth-child(3)`).innerText = text;
+    }
+
+    function copyAllAnswer(){
+      let answers = ``
+      let domAnswers = document.querySelectorAll("tr")
+      domAnswers.forEach((dom, index) => {
+        if (index == 0) return
+        answers += `${index}.${dom.querySelector("td:nth-child(2)").innerText}:\n${dom.querySelector("td:nth-child(3)").innerText}\n\n`
+      })
+      navigator.clipboard.writeText(answers);
+    }
+
+    function copyStudentAnswer(event){
+      navigator.clipboard.writeText(event.target.innerText);
+    }
+
+    function switchModule(event){
+      const classModule = event.value
+      let innerHtml = '<option value="" selected disabled>Chọn bài tập</option>'
+      toeicswModule[classModule].forEach((item, index) => innerHtml += `<option value=${index}>${item[0]}</option>`)
+      document.getElementById("exercise").innerHTML = innerHtml
+    }
+
+
+    // Function to handle file selection
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      const audioPlayer = document.getElementById('audioPlayer');
+
+      if (file) {
+        const objectURL = URL.createObjectURL(file);
+        audioPlayer.src = objectURL;
+      } else {
+        audioPlayer.src = '';
+      }
+    }
+
+    // Add event listener to the file input
+    const audioInput = document.getElementById('audioFileInput');
+    audioInput.addEventListener('change', handleFileSelect);
+
+    // Send Question to Student
+    async function sendQuestion() {
+      document.getElementById("sendQuestion").disabled = true;
+      setTimeout(() => document.getElementById("sendQuestion").disabled = false, 3000)
+      const questionInput = document.getElementById('questionInput');
+      const question = questionInput.value.trim();
+
+      // Get template
+      const classModule = document.getElementById("classModule").value
+      const classExercise = document.getElementById("exercise").value
+
+      // Get the selected file
+      const audioFileInput = document.getElementById('audioFileInput');
+      const audioFile = audioFileInput.files[0];
+      audioData = await readFileAsArrayBuffer(audioFile)
+
+      imageFileInput = document.getElementById('imageFileInput');
+      imageFile = imageFileInput.files[0];
+      imageData = await readFileAsArrayBuffer(imageFile)
+
+      const minTime = document.getElementById("minTime").value
+      const secondTime = document.getElementById("secondTime").value
+      const countTime = parseInt(minTime)*60 + parseInt(secondTime)
+      const now = new Date()
+      const end = new Date(now.getTime() + countTime*1000)
+      const expireTime = end.getTime()
+
+      ws.send(
+        JSON.stringify({
+          type: 'new_question',
+          data: {question, expireTime, audioData, imageData, classModule, classExercise},
+        })
+      )
+
+      let recordDoms = document.querySelectorAll('#studentList > tr > td:nth-child(3)')
+      for (let i = 0; i < recordDoms.length; i++) {
+        recordDoms[i].innerHTML = ''
+      }
+    }
+
+    async function readFileAsArrayBuffer(file) {
+      return new Promise((resolve, reject) => {
+        if (!file) resolve(null)
+
+        const reader = new FileReader();
+
+        reader.onload = event => {
+          const unit8Data = new Uint8Array(event.target.result);
+          resolve(unit8Data);
+        };
+
+        reader.onerror = event => {
+          reject(new Error('File read error.'));
+        };
+
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    function resetQuestion(){
+      document.getElementById("classModule").value = ""
+      document.getElementById("exercise").value = ""
+      document.getElementById("questionInput").value = ""
+      document.getElementById("imageFileInput").value = ""
+      document.getElementById("audioFileInput").value = ""
+    }
+  </script>
+</body>
+</html>

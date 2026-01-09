@@ -19,7 +19,7 @@
       user-select: none; /* Standard syntax */
     }
     /* Record Button Animation */
-    .recorder-container{position:fixed;bottom:10%;left:50%;margin-left:-40px;width:80px;background-color:#171f38;display:block;border-radius:100%;cursor:default;transition:.3s ease-in}
+    .recorder-container{position:fixed;bottom:5%;left:50%;margin-left:-40px;width:80px;background-color:#171f38;display:block;border-radius:100%;cursor:default;transition:.3s ease-in}
     .icon-microphone{color:#fff;font-size:40px;line-height:80px;display:block;text-align:center;transition:.1s ease-in;position:relative}
     .outer,.outer-2{-webkit-transform:scale(1);position:absolute;z-index:-1;transition:1.5s}
     .outer{width:78px;height:78px;border-radius:100%;background-color:transparent;border:1px solid #7f8c8d;-webkit-animation:1.5s infinite woong}
@@ -32,7 +32,6 @@
   <!----------------------------- HEADER -------------------------------->
   <div id="header" class="bg-primary text-center text-white py-3">
     <h1 id="bigHeader">CONNECTING...</h1>
-    <span id="smallHeader">If it takes a long time, please contact the teacher!</span>
   </div>
   <section id="profileForm" class="text-center" style="display: none;">
     <h4 class="mt-3">Set Your Name</h4>
@@ -44,19 +43,28 @@
     </div>
     <button class="btn btn-success text-white mt-3" onclick="saveProfile()">Save Profile</button>
   </section>
-  <section id="questionSection" style="display: none;">
-    <h2 class="text-center pt-3"><i id="audioQuestion" onClick="questionAudio.play()" class="p-3 fas fa-play-circle cursor-pointer d-none"></i> <i id="audioAnswer" onClick="recordData.play()" class="p-3 fas fa-play-circle cursor-pointer text-success d-none"></i></h2>
-    <image id="imageQuestion" style="display: block;max-width: 600px;width: 80%;margin-left: auto;margin-right: auto;">
-    <image id="imageQuestion" style="display: block;max-width: 600px;width: 80%;margin-left: auto;margin-right: auto;">
-    <h2 id="question" class="text-center pt-3 px-3 px-md-5">Waiting for the teacher to send a question...</h2>
+  <section id="questionSection" style="max-height: calc(100vh - 200px);overflow: scroll;display: none;">
+    <h2 class="text-center pt-3"><i id="audioQuestion" onClick="questionAudio.play()" class="p-1 fas fa-play-circle cursor-pointer d-none"></i> <i id="audioAnswer" onClick="recordData.play()" class="p-1 fas fa-play-circle cursor-pointer text-success d-none"></i></h2>
+    <image id="imageQuestion" class="d-none" style="display: block;max-width: 400px;max-height: 400px;width: 80%;margin-left: auto;margin-right: auto;">
+    <h4 id="question" class="text-left pt-3 px-3 px-md-5">Waiting for the teacher to send a question...</h4>
     <div class="recorder-container">
       <div class="outer d-none"></div>
       <div class="outer-2 d-none"></div>
       <div id="recordButton" class="icon-microphone cursor-pointer"><i class="fas fa-microphone-alt"></i></div>
     </div>
+    <div class="editor-container text-center d-none">
+      <div class="toolbar m-2">
+        <button class="btn btn-sm btn-primary" onclick="undo()"><i class="fas fa-angle-left"></i> Undo</button>
+        <button class="btn btn-sm btn-primary" onclick="redo()"><i class="fas fa-angle-right"></i> Redo</button>
+        <button class="btn btn-sm btn-primary" onclick="cut()"><i class="fas fa-cut"></i> Cut</button>
+        <button class="btn btn-sm btn-primary" onclick="paste()"><i class="fas fa-paste"></i> Paste</button>
+        <span id="word-count">Word Count: 0</span>
+      </div>
+      <textarea id="text-editor" class="form-control m-auto" style="width: 800px; max-width: 90%;" rows=9 placeholder="Start typing..."></textarea>
+    </div>
   </section>
 
-  <div id="questionSection" style="display: none;">
+  <div id="questionSection" style="max-height: calc(100vh - 250px);overflow: scroll;display: none;">
     <label>Question:</label>
     <div id="question">Waiting for the teacher to send a question...</div>
     <audio controls="" id="audioPlayer" style="height: 30px">
@@ -71,10 +79,13 @@
     <div id="message">Waiting for the teacher...</div>
   </div>
 
+  <script src="data.js?v=29"></script>
   <script>
     var questionAudio, recordData;
     var profileSaved = false;
     var recorder; // Declare the recorder variable
+    var prepareSound = new Audio('https://toeicsinhvien.com/toeicsw/swtest/statics/toeic/speaking_sound_start_record.mp3')
+    var startSound = new Audio('https://toeicsinhvien.com/toeicsw/swtest/statics/toeic/speaking_sound_start_3_11.mp3')
     /****************************** WEBSOCKET *******************************/
     const wsUrl = 'phatam.toeicsinhvien.com:8080'
     const ws = new WebSocket('wss://' + wsUrl);
@@ -82,7 +93,6 @@
     ws.onopen = () => {
       console.log('Connected to the server.');
       document.getElementById('bigHeader').innerText = 'TOEICSINHVIEN'
-      document.getElementById('smallHeader').innerText = 'Ready to get exercise!'
     };
 
     ws.onmessage = (event) => {
@@ -109,22 +119,52 @@
       }
     };
 
-    function generateNewQuestion(question, expireTime, audioData, imageData, classModule, classExercise){
-      const now = new Date()
-      if (now.getTime() < expireTime){
-        let timeLeft = Math.floor((expireTime - now.getTime())/1000)
-        startCountdown(timeLeft)
-      }
-
+    async function generateNewQuestion(question, expireTime, audioData, imageData, classModule, classExercise){
+      console.log(expireTime);
+      document.getElementById("text-editor").value = ""
       document.getElementById("question").innerText = question
       document.getElementById("audioAnswer").classList.add("d-none")
       document.getElementById("audioQuestion").classList.add("d-none")
       document.getElementById("imageQuestion").classList.add("d-none")
       if (classModule){
-        questionAudio = new Audio(`https://toeicsinhvien.com/temp/recordingWS/assets/data/${classModule}/${classExercise}.mp3`)
-        document.getElementById("audioQuestion").classList.remove("d-none")
-        document.getElementById("imageQuestion").src = `https://toeicsinhvien.com/temp/recordingWS/assets/data/${classModule}/${classExercise}.PNG`
-        document.getElementById("imageQuestion").classList.remove("d-none")
+        // SPEAKING
+        if(classModule < 1){ // Question 1-2
+          document.getElementById("imageQuestion").src = toeicswModule[classModule][classExercise][1]
+          document.getElementById("imageQuestion").classList.remove("d-none")
+          questionAudio = new Audio(`https://toeicsinhvien.com/toeicsw/onlineclass/${toeicswModule[classModule][classExercise][2]}`)
+          document.getElementById("audioQuestion").classList.remove("d-none")
+        } else if(classModule < 3){ // Question 3-4
+          document.getElementById("imageQuestion").src = toeicswModule[classModule][classExercise][1]
+          document.getElementById("question").innerText = toeicswModule[classModule][classExercise][2]
+          document.getElementById("imageQuestion").classList.remove("d-none")
+        } else if (classModule < 6){ // Question 567
+          document.getElementById("question").innerText = toeicswModule[classModule][classExercise][1]
+          document.getElementById("imageQuestion").classList.remove("d-none")
+        } else if (classModule < 8){ // Question 8910
+          document.getElementById("imageQuestion").src = toeicswModule[classModule][classExercise][2]
+          document.getElementById("imageQuestion").classList.remove("d-none")
+          let audio = new Audio(toeicswModule[classModule][classExercise][1])
+          audio.play()
+          await sleep(1000)
+          console.log(audio.duration);
+          await sleep(audio.duration*1000 - 1000)
+          expireTime += audio.duration*1000
+          document.getElementById("question").innerText = toeicswModule[classModule][classExercise][3]
+        } else if (classModule < 12) { // Question 11
+          document.getElementById("question").innerText = toeicswModule[classModule][classExercise][1]
+        }
+        // WRITING
+        else if (classModule < 14) { // Writing15
+          document.getElementById("imageQuestion").src = toeicswModule[classModule][classExercise][1]
+          document.getElementById("question").innerText = toeicswModule[classModule][classExercise][2]
+          document.getElementById("imageQuestion").classList.remove("d-none")
+        } else if (classModule < 17) { // Writing67
+          document.getElementById("question").innerText = toeicswModule[classModule][classExercise][1]
+          document.getElementById("text-editor").value = toeicswModule[classModule][classExercise][2]
+        } else { // Writing8
+          document.getElementById("question").innerText = toeicswModule[classModule][classExercise][1]
+          document.getElementById("text-editor").value = toeicswModule[classModule][classExercise][2]
+        }
       } else {
         if (audioData) {
           let audioUrl = unitDataToUrl(Object.values(audioData), "audio/wav")
@@ -137,6 +177,15 @@
           document.getElementById("imageQuestion").classList.remove("d-none")
         }
       }
+      // START COUNTTIME
+      const now = new Date()
+      if (now.getTime() < expireTime){
+        // startSound.play()
+        // await sleep(2000)
+        let timeLeft = Math.floor((expireTime - now.getTime())/1000)
+        startCountdown(timeLeft)
+        // startRecord()
+      }
     }
 
     let countdownInterval; // Declare a variable to store the interval ID
@@ -145,9 +194,7 @@
       clearInterval(countdownInterval); // Clear the previous interval, if any
 
       const timerElement = document.getElementById('bigHeader');
-      const noticeElement = document.getElementById('smallHeader');
       const alertSound = new Audio('./assets/ding.mp3')
-      noticeElement.innerText = 'Finish your exercise after time end!'
 
       function updateTimerDisplay(minutes, seconds) {
         timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
@@ -163,6 +210,7 @@
           clearInterval(countdownInterval);
           timerElement.textContent = 'Time\'s up!';
           alertSound.play(); // Play the audio alert
+          stopRecord()
         }
 
         seconds--;
@@ -214,6 +262,88 @@
       // }     
     };
 
+    /****************************** WRITING *********************************/
+    
+    let editor = document.getElementById('text-editor');
+    let wordCountDisplay = document.getElementById('word-count');
+    let undoStack = [];
+    let redoStack = [];
+
+    editor.addEventListener('input', function() {
+      updateWordCount();
+      saveState();
+    });
+
+    document.addEventListener('keydown', function(event) {
+      if (event.key === " " || event.key === ".") {
+        wssendText()
+      }
+      if (event.ctrlKey) {
+        if (event.key === 'z') { // Ctrl+Z - Undo
+          undo();
+          event.preventDefault(); // Ngừng hành động mặc định của trình duyệt (ví dụ: undo trong trình duyệt)
+        } else if (event.key === 'y') { // Ctrl+Y - Redo
+          redo();
+          event.preventDefault(); // Ngừng hành động mặc định của trình duyệt (ví dụ: redo trong trình duyệt)
+        }
+      }
+    });
+
+    document.getElementById("text-editor").addEventListener("focusout", () => wssendText())
+
+    function wssendText(){
+      try {
+        ws.send(
+          JSON.stringify({
+            type: 'student_text',
+            text: editor.value,
+          })
+        );
+      } catch (e) {}
+    }
+
+    function saveState() {
+    undoStack.push(editor.value);
+      if (undoStack.length > 2000) { // Limit the undo history stack size
+        undoStack.shift();
+      }
+      redoStack = []; // Clear the redo stack
+    }
+
+    function undo() {
+      if (undoStack.length > 1) {
+        redoStack.push(undoStack.pop());
+        editor.value = undoStack[undoStack.length - 1];
+      }
+    }
+
+    function redo() {
+      if (redoStack.length > 0) {
+        let lastRedo = redoStack.pop();
+        undoStack.push(lastRedo);
+        editor.value = lastRedo;
+      }
+    }
+
+    function cut() {
+      document.execCommand('cut');
+      saveState();
+    }
+
+    function paste() {
+      document.execCommand('paste');
+      saveState();
+    }
+
+    function updateWordCount() {
+      let text = editor.value.trim();
+      let wordCount = text ? text.split(/\s+/).length : 0;
+      wordCountDisplay.textContent = 'Word Count: ' + wordCount;
+    }
+
+    function showWordCount() {
+      alert('Word Count: ' + editor.value.trim().split(/\s+/).length);
+    }
     /****************************** RECORDING *******************************/
     const recordAudio = () => {
       return new Promise(async (resolve) => {
@@ -238,7 +368,7 @@
               const play = () => audio.play();
               const pause = () => audio.pause();
               console.log(audioBlob.size);
-              if (audioBlob.size >= 350000)
+              if (audioBlob.size >= 3000000)
                 resolve()
               else
                 resolve({ binaryData, audioUrl, play, pause });
@@ -252,35 +382,43 @@
     (async () => (recorder = await recordAudio()))();
 
     // Assign recorder when Save Profile is clicked
-    var onRecord = false, startSound = new Audio('./assets/start-record.mp3')
+    var onRecord = false
     document.getElementById('recordButton').addEventListener('click', async () => {
-      if (onRecord) {
-        document.querySelector(".outer").classList.add("d-none")
-        document.querySelector(".outer-2").classList.add("d-none")
-        document.querySelector(".recorder-container").classList.remove("bg-danger")
-        document.querySelector("#header").classList.remove("bg-danger")
-        recordData = await recorder.stop();
-        try {
-          ws.send(
-            JSON.stringify({
-              type: 'student_record',
-              binaryData: recordData.binaryData,
-            })
-          );
-          document.getElementById("audioAnswer").classList.remove("d-none")
-        } catch (e) {}
-        onRecord = false
-        document.getElementById('status').innerText = 'Status: Not Recording';
-      } else {
-        recorder.start();
-        startSound.play()
-        document.querySelector(".outer").classList.remove("d-none")
-        document.querySelector(".outer-2").classList.remove("d-none")
-        document.querySelector(".recorder-container").classList.add("bg-danger")
-        document.querySelector("#header").classList.add("bg-danger")
-        onRecord = true
-      }
+      if (onRecord)
+        stopRecord()
+      else 
+        startRecord()
     });
+
+    function startRecord(){
+      recorder.start();
+      document.querySelector(".outer").classList.remove("d-none")
+      document.querySelector(".outer-2").classList.remove("d-none")
+      document.querySelector(".recorder-container").classList.add("bg-danger")
+      document.querySelector("#header").classList.add("bg-danger")
+      onRecord = true
+    }
+
+    async function stopRecord(){
+      document.querySelector(".outer").classList.add("d-none")
+      document.querySelector(".outer-2").classList.add("d-none")
+      document.querySelector(".recorder-container").classList.remove("bg-danger")
+      document.querySelector("#header").classList.remove("bg-danger")
+      recordData = await recorder.stop();
+      try {
+        ws.send(
+          JSON.stringify({
+            type: 'student_record',
+            binaryData: recordData.binaryData,
+          })
+        );
+        document.getElementById("audioAnswer").classList.remove("d-none")
+      } catch (e) {}
+      onRecord = false
+      document.getElementById('status').innerText = 'Status: Not Recording';
+    }
+
+
 
     document.getElementById('stopRecording').addEventListener('click', async () => {
       
@@ -314,6 +452,7 @@
     }
 
 
+
     /****************************** KHÁC **************************/
     const listAvatar = ['bear','cat','chick','chicken','cow','dog','duck','fox','goat','goldfish','hamster','hedgehog','horse','kitten','moose','owl','pig','puppy','rabbit','raccoon','seal','sheep','snowyOwl','squirrel','turtle','walrus','anaconda','capuchinMonkey','cockatoo','jaguar','macaw','orangutan','parrot','panther','tiger','toucan','dragon','elf','unicorn','cheshireCat','whiteRabbit']
     var avatarHtml = '', selectedAvatar = localStorage.avatar ? localStorage.avatar : 'bear'
@@ -330,6 +469,16 @@
     window.onload = function() {
       document.getElementById('name').value = localStorage.name ? localStorage.name : ""
       document.getElementById(localStorage.avatar).click()
+    }
+
+    function sleep(ms, message = null) {
+      let sleepLog = setInterval(() => console.log(`Sleep time ${ms/1000}s: ${message}`), 1000)
+      return new Promise(resolve => {
+        setTimeout(() => {
+          clearInterval(sleepLog)
+          resolve()
+        }, ms)
+      });
     }
   </script>
 </body>
